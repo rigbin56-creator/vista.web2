@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>★ Perfil de Rigbin ★</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@700&family=Paytone+One&family=Patrick+Hand&display=swap');
+
+        /* 1. FONDO Y EFECTO DE GRANO */
+        body {
+            background: url(https://i.gifer.com/76YS.gif) fixed;
+            background-size: cover;
+        }
+
+        html:after {
+            animation: grain 8s steps(10) infinite;
+            background-image: url(https://64.media.tumblr.com/849c4259435e5ff9789dd42e23fbf003/tumblr_p422nhq6vi1qzm8dwo1_640.gifv);
+            content: ""; height: 300%; left: -50%; opacity:.15; position: fixed; top: -110%; width: 300%; pointer-events:none; z-index: 999;
+        }
+        @keyframes grain { 70% { transform:translate(0%, 15%) } }
+
+        /* 2. LOADING SCREEN */
+        body:before {
+            content: "CARGANDO EL MUNDO DE RIGBIN...";
+            font-family: 'Paytone One', sans-serif;
+            color: white; text-align: center; padding-top: 45vh;
+            height: 100vh; width: 100vw; display: block; position: fixed;
+            top: 0; left: 0; z-index: 10000;
+            background: #8870ff url('https://i.pinimg.com/originals/61/ee/e5/61eee57480a9223ef1c5f40e47cd2b03.gif') no-repeat center 30%;
+            animation: yourAnimation 1.5s ease 1s 1 normal forwards;
+            pointer-events: none;
+        }
+        @keyframes yourAnimation { 0%{ opacity: 1;} 90%{ opacity: 1; } 100%{ opacity: 0;} }
+
+        /* 3. CURSORES */
+        * { cursor: url('https://cur.cursors-4u.net/symbols/sym-2/sym189.png'), auto !important; }
+        a:hover { cursor: url('https://cur.cursors-4u.net/games/images4/gam308.png'), auto !important; }
+
+        /* 4. CONTENEDOR PRINCIPAL */
+        main.profile-container {
+            max-width: 800px; margin: 20px auto;
+            background: rgba(45, 20, 70, 0.85);
+            backdrop-filter: blur(5px);
+            border: 2px dotted #f1beff;
+            border-radius: 15px; padding: 20px;
+            color: white;
+        }
+
+        /* 5. TEXTOS Y CABECERAS */
+        h1 {
+            font-size: 45px !important; font-family: 'Paytone One', sans-serif;
+            background: -webkit-linear-gradient(#8870ff, #ff70de);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-align: center; animation: floating 3s infinite ease-in-out;
+        }
+
+        .section-header {
+            background: rgba(171, 118, 207, 0.4);
+            border: 2px dotted rgba(218, 165, 255, 0.65);
+            border-radius: 10px; padding: 5px 15px; margin: 15px 0;
+            font-family: 'Paytone One', sans-serif; color: white;
+            text-transform: lowercase;
+        }
+
+        /* 6. ANIMACIONES */
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(8px); }
+        }
+
+        /* 7. MUSICA (MINI PLAYER) */
+        .music-player {
+            background: #000; border: 1px dashed #ff9ce0;
+            padding: 10px; margin: 10px 0; border-radius: 5px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        /* 8. GRID DE STAMPS Y USERBOXES */
+        .stamp-grid {
+            display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
+            margin-top: 10px;
+        }
+        .stamp-grid img { height: 35px; border: 1px solid rgba(255,255,255,0.2); }
+
+        .userbox-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px; margin: 20px 0;
+        }
+        .userbox-grid img { width: 100%; border-radius: 5px; transition: 0.3s; }
+        .userbox-grid img:hover { transform: scale(1.1) rotate(2deg); }
+
+        /* EASTER EGG: AMONG US */
+        .amongus-secret {
+            position: absolute; width: 15px; opacity: 0; cursor: help;
+        }
+        .amongus-secret:hover { opacity: 1; filter: drop-shadow(0 0 5px red); }
+    </style>
+</head>
+<body>
+
+    <header style="background: rgba(0,0,0,0.5);">
+        <nav>
+            <ul style="display:flex; justify-content:center; gap:20px; list-style:none; padding:10px;">
+                <li><a href="index.html">⌂ HOME</a></li>
+                <li><a href="feed.html">⌗ FEED</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="profile-container">
+        <div style="text-align: center;">
+            <h1>Rigbin</h1>
+            <img src="https://i.pinimg.com/originals/61/ee/e5/61eee57480a9223ef1c5f40e47cd2b03.gif"
+                 style="width:150px; border-radius:50%; border: 3px dashed #ff9ce0; box-shadow: 0 0 15px #ff75d1;">
+            <p style="font-family: 'Patrick Hand'; font-size: 1.2rem; color: #ffedf9; margin-top:10px;">
+                "Explorando el vacío, un píxel a la vez"
+            </p>
+        </div>
+
+        <div class="music-player">
+            <span style="font-size:20px;">🎶</span>
+            <marquee scrollamount="3" style="font-family: monospace; color: #0f0;">
+                "Reproduciendo" ahora: Crystal Castles - Kerosene.mp3 (128kbps) ---------- [|||||||||||]
+            </marquee>
+        </div>
+
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+                <div class="section-header">Contactando a Rigbin</div>
+                <div style="border: 1px dashed #ff75d1; padding: 10px; font-size: 0.8rem;">
+                    ⭐ Agregar a Amigos <br>
+                    🌟 Añadir a Favoritos <br>
+                    🌠 Enviar Mensaje <br>
+                    <span class="amongus-secret">ඞ</span>👾 Bloquear Usuario
+                </div>
+
+                <div class="section-header">Intereses</div>
+                <div style="font-size: 0.9rem; padding: 10px; background: rgba(0,0,0,0.2);">
+                    <p><b>General:</b> Programar, Pizza, Noches de lluvia.</p>
+                    <p><b>Música:</b> Breakcore, Lo-fi, 8-bit.</p>
+                </div>
+            </div>
+
+            <div style="flex: 2; min-width: 300px;">
+                <div class="section-header">Blurbs</div>
+                <p style="color: #ffedf9; font-weight: bold;">Sobre mí:</p>
+                <p style="font-size: 14px;">Bienvenido a mi rincón digital. Soy Rigbin, entusiasta de lo retro y guardián de este baúl. Si encuentras el impostor, dímelo.</p>
+
+                <div class="section-header">User Boxes</div>
+                <div class="userbox-grid">
+                    <img src="https://media.tenor.com/DzHyxg3Xk8YAAAAj/among-us%E3%81%AE%E6%96%B0%E3%83%9E%E3%83%83%E3%83%97%E3%83%80%E3%83%B3%E3%82%B9.gif" height="135px">
+                    <img src="https://collection.ju.mp/assets/images/gallery23/4789b5e9_original.jpg?v=0236594d">
+                    <img src="https://collection.ju.mp/assets/images/gallery23/3440391d_original.jpg?v=0236594d">
+                    <img src="https://collection.ju.mp/assets/images/gallery23/d9c1dbae_original.jpg?v=0236594d">
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header" style="text-align:center;">My Stamps</div>
+        <div class="stamp-grid">
+            <img src="https://64.media.tumblr.com/7d9a895b3dc03381b5d5cf278d80bad7/98ab3dff3b1c6819-49/s100x200/0182d531434d7aa9b74a72747859629d634d1185.gifv">
+            <img src="https://64.media.tumblr.com/f197b651a828df47b36f4aff0928478d/b00c6a9cc9494f43-a5/s100x200/92a8d1e32b4fd5e222d77cd070c407dc1f9bca38.gifv">
+            <img src="https://64.media.tumblr.com/730ce2825e3e6d4c774a8385ebe8bc3b/b00c6a9cc9494f43-0c/s100x200/deb7bfec3402519dff0792f95927687939925833.gifv">
+            <img src="https://64.media.tumblr.com/7a1ed336c838c6f8f82d39de79c5e16a/c47c936f31465ded-8d/s250x400/e66d4abc361c6f893cc97fdd24d568dccd3ba5da.gifv">
+            <img src="https://files.catbox.moe/ug2wvw.png">
+            <img src="https://files.catbox.moe/bu98vz.png">
+        </div>
+
+    </main>
+
+    <footer style="text-align: center; padding: 20px; font-size: 0.7rem; opacity: 0.6;">
+        Rigbin &copy; 2026 - Hecho con 💜 y mucho código basura.
+    </footer>
+
+</body>
+</html>
