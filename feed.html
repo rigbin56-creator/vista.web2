@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed | Rigbin & Candy</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="feed.html" class="active">Feed</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="compose-box">
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 0.8rem; color: var(--text-dim);">Publicando como:</label>
+                <select id="authorSelect" style="background:transparent; color:white; border:none; font-weight:bold;">
+                    </select>
+            </div>
+
+            <textarea id="postContent" placeholder="¿Qué quieres guardar hoy?"></textarea>
+            <input type="text" id="mediaUrl" placeholder="Pegar URL de imagen o video (opcional)"
+                   style="width:100%; background:rgba(0,0,0,0.2); border:none; color:white; padding:8px; margin-top:10px; border-radius:6px;">
+
+            <div style="margin-top: 10px; text-align: right;">
+                <button class="btn btn-primary" onclick="publishPost()">Publicar</button>
+            </div>
+        </div>
+
+        <div id="feedList"></div>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/feed.js"></script>
+</body>
+</html>

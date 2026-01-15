@@ -1,0 +1,234 @@
+/* css/style.css */
+:root {
+    --bg-dark: #121214;
+    --bg-card: #1c1c1e;
+    --text-main: #e1e1e6;
+    --text-dim: #a8a8b3;
+    --accent-1: #b39ddb; /* Lavanda (Rigbin) */
+    --accent-2: #90caf9; /* Celeste (Candy) */
+    --danger: #ef5350;
+    --radius: 12px;
+    --trans-fast: 0.2s ease;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 80px; /* Espacio para scroll */
+}
+
+/* --- Layout & Header --- */
+.container {
+    max-width: 600px; /* Estrecho para sentirlo "móvil" en desktop */
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+header {
+    position: sticky;
+    top: 0;
+    background: rgba(18, 18, 20, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    z-index: 100;
+    padding: 15px 0;
+}
+
+nav ul {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    list-style: none;
+}
+
+nav a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color var(--trans-fast);
+}
+
+nav a:hover, nav a.active {
+    color: var(--text-main);
+}
+
+/* --- Componentes UI --- */
+.btn {
+    background: transparent;
+    border: 1px solid var(--text-dim);
+    color: var(--text-main);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all var(--trans-fast);
+}
+
+.btn-primary {
+    background: var(--text-main);
+    color: var(--bg-dark);
+    border: none;
+    font-weight: bold;
+}
+
+/* --- Feed Styles --- */
+.compose-box {
+    background: var(--bg-card);
+    padding: 16px;
+    border-radius: var(--radius);
+    margin: 20px 0;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    resize: none;
+    font-size: 1rem;
+    outline: none;
+    min-height: 60px;
+}
+
+.post-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    animation: fadeIn 0.4s ease-out;
+    position: relative;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #333;
+}
+
+.author-name { font-weight: bold; font-size: 0.95rem; }
+.post-meta { font-size: 0.75rem; color: var(--text-dim); }
+
+.post-content { margin-bottom: 10px; white-space: pre-wrap; }
+
+.media-container img, .media-container video {
+    width: 100%;
+    border-radius: var(--radius);
+    margin-top: 8px;
+    max-height: 500px;
+    object-fit: cover;
+}
+
+/* Video Player Styles */
+video { cursor: pointer; }
+
+/* Edit Controls */
+.post-actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    opacity: 0.5;
+}
+.post-card:hover .post-actions { opacity: 1; }
+
+.edit-indicator {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Estilos Nuevos (Perfil, Galería, Lightbox) --- */
+
+/* Cards de Perfil en Home */
+.profile-card-home {
+    flex: 0 0 140px; /* Ancho fijo */
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform var(--trans-fast);
+}
+
+.profile-card-home:active { transform: scale(0.98); }
+
+.profile-card-home img {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+.profile-card-home .info { text-align: center; line-height: 1.2; }
+.profile-card-home small { color: var(--text-dim); font-size: 0.75rem; }
+
+/* Link Cards (Botones grandes home) */
+.link-card {
+    text-decoration: none;
+    color: var(--text-main);
+    transition: background 0.2s;
+}
+.link-card:active { background: #2c2c2e; }
+
+/* Galería Grid */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+}
+
+.gallery-item {
+    aspect-ratio: 1 / 1;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #333;
+}
+
+/* Lightbox */
+.lightbox {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s;
+}
+.lightbox-content {
+    text-align: center;
+    max-width: 90%;
+}
+.lightbox-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+}

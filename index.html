@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosotros | Rigbin & Candy</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Home</a></li>
+                    <li><a href="#">Nosotros</a></li> <li><a href="gallery.html">Galería</a></li>
+                    <li><a href="feed.html">Feed</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+      <section style="margin-top: 30px; margin-bottom: 30px;">
+      <h2 style="font-size: 1.2rem; margin-bottom: 15px; border-left: 3px solid var(--text-main); padding-left: 10px;">Protagonistas</h2>
+      <div style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+
+          <a href="rigbin.html" class="profile-card-home" style="border-color: var(--accent-1);">
+              <img src="assets/avatars/rigbin.jpeg" alt="Rigbin">
+              <div class="info">
+                  <span style="color: var(--accent-1);">Rigbin</span>
+                  <small>Ver mundo</small>
+              </div>
+          </a>
+
+          <a href="candy.html" class="profile-card-home" style="border-color: var(--accent-2);">
+              <img src="assets/avatars/candy.jpeg" alt="Candy">
+              <div class="info">
+                  <span style="color: var(--accent-2);">Candy</span>
+                  <small>Ver mundo</small>
+              </div>
+          </a>
+
+      </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+      <a href="gallery.html" class="post-card link-card">
+          <h3>📸 Galería</h3>
+          <p>Nuestros momentos</p>
+      </a>
+      <a href="games.html" class="post-card link-card"> <h3>🎮 Juegos</h3>
+          <p>Tres en Raya</p>
+      </a>
+  </div>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
