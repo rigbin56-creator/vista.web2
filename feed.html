@@ -8,17 +8,6 @@
 </head>
 <body>
 
-    <header>
-        <div class="container">
-            <nav>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="feed.html" class="active">Feed</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-
     <main class="container">
         <div class="compose-box">
             <div style="margin-bottom: 10px;">
@@ -39,8 +28,57 @@
         <div id="feedList"></div>
     </main>
 
-    <script src="js/config.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/feed.js"></script>
-</body>
+    <body>
+        <header class="app-header">
+            <div class="header-left">
+                <span id="themeToggle" class="icon-btn">🌙</span>
+            </div>
+            <nav class="header-nav">
+                <a href="index.html" class="nav-item">Home</a>
+                <a href="feed.html" class="nav-item active">Feed</a>
+                <a href="gallery.html" class="nav-item">Galería</a>
+            </nav>
+            <div class="header-right">
+                <img id="currentUserAvatar" src="" class="mini-avatar" onclick="UserSystem.login(UserSystem.getCurrentUser().id === 'rigbin' ? 'candy' : 'rigbin')">
+            </div>
+        </header>
+
+        <main id="feedList" class="feed-container"></main>
+
+        <button id="fabBtn" class="fab">
+            <span>+</span>
+        </button>
+
+        <div id="createPostPanel" class="create-panel">
+            <div class="panel-header">
+                <h3>Nuevo Recuerdo</h3>
+                <button id="closePanelBtn">✕</button>
+            </div>
+            <div class="panel-body">
+                <textarea id="postContent" placeholder="¿Qué estás pensando?"></textarea>
+                <input type="text" id="mediaUrl" placeholder="Link de imagen, video o YouTube...">
+                <button id="publishBtn" class="btn-primary">Publicar</button>
+            </div>
+        </div>
+
+        <div id="mediaModal" class="media-modal">
+            <button class="modal-close">✕</button>
+            <div class="modal-content">
+                <div id="modalMediaContainer"></div>
+                <div class="modal-info">
+                    <div class="modal-meta">
+                        <img id="modalAvatar" src="" class="mini-avatar">
+                        <span id="modalAuthor"></span>
+                        <span id="modalDate" class="date-dim"></span>
+                    </div>
+                    <p id="modalText"></p>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+        <script src="js/config.js"></script>
+        <script src="js/feed.js"></script>
+    </body>
 </html>

@@ -1,206 +1,234 @@
 /**
  * js/feed.js
- * v2.1 - Reparación de YouTube (Error 153), Autoplay y Perfiles
+ * Lógica del Feed, UI Moderna y Firebase
  */
 
-// 1. Persistencia de Datos
-let posts = [];
-try {
-    posts = JSON.parse(localStorage.getItem('rc_feed_posts')) || [];
-} catch (e) {
-    console.error("Error en base de datos local:", e);
-    posts = [];
-}
+// --- 1. CONFIGURACIÓN E INICIO ---
+let db;
+const currentUser = UserSystem.getCurrentUser();
 
-// 2. Elementos del DOM
+// Elementos UI
 const feedContainer = document.getElementById('feedList');
-const authorSelect = document.getElementById('authorSelect');
+const fabBtn = document.getElementById('fabBtn');
+const createPanel = document.getElementById('createPostPanel');
+const closePanelBtn = document.getElementById('closePanelBtn');
+const publishBtn = document.getElementById('publishBtn');
 const contentInput = document.getElementById('postContent');
 const mediaInput = document.getElementById('mediaUrl');
+const themeBtn = document.getElementById('themeToggle');
+const userAvatar = document.getElementById('currentUserAvatar');
 
-// 3. Inicialización al cargar la página
+// Elementos Modal
+const modal = document.getElementById('mediaModal');
+const modalClose = document.querySelector('.modal-close');
+const modalContainer = document.getElementById('modalMediaContainer');
+const modalText = document.getElementById('modalText');
+const modalAuthor = document.getElementById('modalAuthor');
+const modalAvatar = document.getElementById('modalAvatar');
+const modalDate = document.getElementById('modalDate');
+
+try {
+    firebase.initializeApp(CONFIG.firebaseConfig);
+    db = firebase.database();
+} catch (e) { console.error("Error Firebase", e); }
+
+// --- 2. EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
-    if (authorSelect) populateAuthors();
-    if (feedContainer) renderFeed();
-    initVideoObserver();
+    // Configurar Avatar Header
+    if(userAvatar) userAvatar.src = currentUser.avatar;
+
+    // Configurar Botón Tema
+    if(themeBtn) {
+        themeBtn.onclick = () => { themeBtn.textContent = ThemeSystem.toggle(); };
+        // Setear icono inicial
+        themeBtn.textContent = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
+    }
+
+    // FAB y Panel
+    fabBtn.onclick = () => createPanel.classList.add('open');
+    closePanelBtn.onclick = () => createPanel.classList.remove('open');
+    publishBtn.onclick = publishPost;
+
+    // Modal Cierres
+    modalClose.onclick = closeModal;
+    // Cerrar con Swipe Down (básico para móvil)
+    let touchStartY = 0;
+    modal.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
+    modal.addEventListener('touchend', e => {
+        if (e.changedTouches[0].clientY - touchStartY > 100) closeModal();
+    });
+
+    listenForPosts();
 });
 
-// --- FUNCIONES PRINCIPALES ---
-
-/**
- * Llena el selector de autores basado en config.js
- */
-function populateAuthors() {
-    if (!authorSelect) return;
-    authorSelect.innerHTML = '';
-    Object.values(CONFIG.AUTHORS).forEach(author => {
-        const option = document.createElement('option');
-        option.value = author.id;
-        option.textContent = author.name;
-        authorSelect.appendChild(option);
-    });
-}
-
-/**
- * Crea y guarda una nueva publicación
- */
+// --- 3. FUNCIONES DE FIREBASE ---
 function publishPost() {
     const content = contentInput.value.trim();
     const media = mediaInput.value.trim();
-    const authorId = authorSelect.value;
 
-    if (!content && !media) {
-        alert("¡Escribe un mensaje o pega un link para recordar!");
-        return;
-    }
+    if (!content && !media) return alert("Escribe algo o pon un link.");
 
-    const newPost = {
-        id: Date.now(),
-        authorId: authorId,
+    const newPostKey = db.ref().child('posts').push().key;
+    const postData = {
+        id: newPostKey,
+        authorId: currentUser.id, // Usa el usuario logueado en localStorage
         content: content,
         media: media,
         type: getMediaType(media),
-        timestamp: Date.now(),
-        editedHistory: []
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        edited: false
     };
 
-    posts.unshift(newPost);
-    saveAndRender();
-
-    // Limpiar formulario
-    contentInput.value = '';
-    mediaInput.value = '';
+    db.ref('posts/' + newPostKey).set(postData, (err) => {
+        if (!err) {
+            createPanel.classList.remove('open'); // Cerrar panel
+            contentInput.value = '';
+            mediaInput.value = '';
+        }
+    });
 }
 
-/**
- * Dibuja todos los posts en el muro
- */
-function renderFeed() {
-    if (!feedContainer) return;
-    feedContainer.innerHTML = '';
+function listenForPosts() {
+    db.ref('posts').limitToLast(50).on('value', (snapshot) => {
+        const data = snapshot.val();
+        feedContainer.innerHTML = '';
 
-    if (posts.length === 0) {
-        feedContainer.innerHTML = `
-            <div style="text-align:center; padding: 50px 20px; color: var(--text-dim);">
-                <p style="font-size: 1.2rem;">✨ El baúl está vacío.</p>
-                <small>Publica el primer recuerdo arriba.</small>
-            </div>`;
-        return;
+        if (!data) {
+            feedContainer.innerHTML = `<div style="text-align:center; padding:20px; opacity:0.6">Nada por aquí aún...</div>`;
+            return;
+        }
+
+        const posts = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+        posts.forEach(renderPost);
+        initVideoObserver();
+    });
+}
+
+function deletePost(postId) {
+    if(confirm("¿Borrar este recuerdo?")) db.ref('posts/' + postId).remove();
+}
+
+function editPost(postId, currentContent) {
+    const newText = prompt("Editar mensaje:", currentContent);
+    if (newText && newText !== currentContent) {
+        db.ref('posts/' + postId).update({ content: newText, edited: true });
+    }
+}
+
+// --- 4. RENDERIZADO Y MODAL ---
+function renderPost(post) {
+    const author = CONFIG.AUTHORS[post.authorId] || CONFIG.AUTHORS['rigbin'];
+    const isOwner = currentUser.id === post.authorId;
+    const contentHtml = linkify(post.content);
+
+    let mediaHtml = '';
+    let mediaClickAttr = ''; // Para abrir modal
+
+    // Preparar Media
+    const ytEmbed = getYoutubeEmbed(post.media || post.content);
+
+    if (ytEmbed) {
+        // YouTube no abre modal, se reproduce inline
+        mediaHtml = ytEmbed;
+    } else if (post.media) {
+        // Guardamos datos en atributos data- para el modal
+        const safeContent = post.content.replace(/"/g, '&quot;');
+        mediaClickAttr = `onclick="openModal('${post.type}', '${post.media}', '${author.name}', '${author.avatar}', '${formatTimestamp(post.timestamp)}', '${safeContent}')"`;
+
+        if (post.type === 'video') {
+            mediaHtml = `
+                <div class="video-wrapper" ${mediaClickAttr}>
+                    <video src="${post.media}" class="feed-video" loop muted playsinline preload="metadata"></video>
+                    <button class="mute-btn" onclick="event.stopPropagation(); toggleMute(this)">🔇</button>
+                </div>`;
+        } else {
+            mediaHtml = `
+                <div class="media-container" ${mediaClickAttr}>
+                    <img src="${post.media}" loading="lazy" alt="Media">
+                </div>`;
+        }
     }
 
-    posts.forEach(post => {
-        const authorData = CONFIG.AUTHORS[post.authorId] || {
-            name: 'Usuario', avatar: 'assets/icons/default.png', color: '#fff', profileLink: '#'
-        };
-
-        // Procesar contenido (links clickeables)
-        const contentHtml = linkify(post.content);
-
-        // --- LÓGICA DE MEDIA (YouTube vs Local) ---
-        let mediaHtml = '';
-        // Prioridad 1: Buscar YouTube en campo media
-        let youtubeEmbed = getYoutubeEmbed(post.media);
-
-        // Prioridad 2: Si no hay, buscar YouTube en el texto
-        if (!youtubeEmbed) {
-            youtubeEmbed = getYoutubeEmbed(post.content);
-        }
-
-        if (youtubeEmbed) {
-            mediaHtml = youtubeEmbed;
-        } else if (post.media) {
-            // Es una imagen o video directo (mp4, jpg, etc)
-            if (post.type === 'video') {
-                mediaHtml = `
-                    <div class="media-container">
-                        <video src="${post.media}" loop muted playsinline class="feed-video"></video>
-                    </div>`;
-            } else {
-                mediaHtml = `
-                    <div class="media-container">
-                        <img src="${post.media}" loading="lazy" alt="Recuerdo">
-                    </div>`;
-            }
-        }
-
-        const article = document.createElement('article');
-        article.className = 'post-card';
-        article.innerHTML = `
-            <div class="post-header">
-                <a href="${authorData.profileLink}">
-                    <img src="${authorData.avatar}" class="avatar">
-                </a>
-                <div style="flex:1;">
-                    <a href="${authorData.profileLink}" style="text-decoration:none;">
-                        <span style="color: ${authorData.color}" class="author-name">${authorData.name}</span>
-                    </a>
-                    ${post.editedHistory.length > 0 ? '<span class="edit-indicator">(editado)</span>' : ''}
-                    <div class="post-meta">${formatDate(post.timestamp)}</div>
-                </div>
+    const article = document.createElement('article');
+    article.className = 'post-card';
+    article.innerHTML = `
+        <div class="post-header">
+            <a href="${author.profileLink}">
+                <img src="${author.avatar}" class="avatar" style="border: 2px solid ${author.color}">
+            </a>
+            <div class="post-info">
+                <span class="author-name" style="color: ${author.color}">${author.name}</span>
+                ${post.edited ? '<span class="edit-tag"> · editado</span>' : ''}
+                <div class="post-meta">${formatTimestamp(post.timestamp)}</div>
             </div>
-
-            <div class="post-content">${contentHtml}</div>
-            ${mediaHtml}
-
-            <div class="post-actions">
-                <button class="btn btn-ghost" style="font-size: 0.7rem;" onclick="enableEdit(${post.id})">Editar</button>
-                <button class="btn btn-ghost" style="font-size: 0.7rem; color: var(--danger);" onclick="deletePost(${post.id})">Eliminar</button>
-            </div>
-        `;
-        feedContainer.appendChild(article);
-    });
-
-    refreshVideoObserver();
+            ${isOwner ? `
+            <div class="post-menu">
+                <button onclick="editPost('${post.id}', '${post.content.replace(/'/g, "\\'")}')">✎</button>
+                <button onclick="deletePost('${post.id}')" style="color:var(--danger)">🗑</button>
+            </div>` : ''}
+        </div>
+        <div class="post-content">${contentHtml}</div>
+        ${mediaHtml}
+    `;
+    feedContainer.appendChild(article);
 }
 
-// --- UTILIDADES ---
+// --- 5. LÓGICA DEL MODAL ---
+window.openModal = function(type, url, author, avatar, date, text) {
+    modalContainer.innerHTML = '';
+    modalText.innerHTML = linkify(text);
+    modalAuthor.textContent = author;
+    modalAvatar.src = avatar;
+    modalDate.textContent = date;
 
-/**
- * Corrección para YouTube Error 153
- */
+    if (type === 'video') {
+        const video = document.createElement('video');
+        video.src = url;
+        video.controls = true;
+        video.autoplay = true;
+        video.style.width = '100%';
+        modalContainer.appendChild(video);
+    } else {
+        const img = document.createElement('img');
+        img.src = url;
+        modalContainer.appendChild(img);
+    }
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Evitar scroll de fondo
+};
+
+function closeModal() {
+    modal.classList.remove('active');
+    modalContainer.innerHTML = ''; // Limpiar para detener video
+    document.body.style.overflow = '';
+}
+
+// --- 6. UTILIDADES (Videos Observer, Youtube, Linkify) ---
+function initVideoObserver() {
+    const videos = document.querySelectorAll('video.feed-video');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.play().catch(e=>{});
+            else entry.target.pause();
+        });
+    }, { threshold: 0.6 });
+    videos.forEach(v => observer.observe(v));
+}
+
+function toggleMute(btn) {
+    const video = btn.previousElementSibling;
+    video.muted = !video.muted;
+    btn.textContent = video.muted ? "🔇" : "🔊";
+}
+
 function getYoutubeEmbed(url) {
     if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-
+    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
     if (match && match[2].length === 11) {
-        const videoId = match[2];
-        // Se añade origin y parámetros de seguridad para evitar errores de carga
-        return `
-            <div class="media-container youtube-container">
-                <iframe
-                    src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${window.location.origin}&rel=0"
-                    title="YouTube video"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen>
-                </iframe>
-            </div>`;
+        return `<div class="media-container youtube-container"><iframe src="https://www.youtube.com/embed/${match[2]}?rel=0" frameborder="0" allowfullscreen></iframe></div>`;
     }
     return null;
-}
-
-function saveAndRender() {
-    localStorage.setItem('rc_feed_posts', JSON.stringify(posts));
-    renderFeed();
-}
-
-function deletePost(id) {
-    if(confirm("¿Quieres borrar este recuerdo permanentemente?")) {
-        posts = posts.filter(p => p.id !== id);
-        saveAndRender();
-    }
-}
-
-function enableEdit(id) {
-    const post = posts.find(p => p.id === id);
-    if (!post) return;
-    const newText = prompt("Edita tu mensaje:", post.content);
-    if (newText !== null && newText !== post.content) {
-        post.content = newText;
-        post.editedHistory.push({ time: Date.now() });
-        saveAndRender();
-    }
 }
 
 function getMediaType(url) {
@@ -209,34 +237,10 @@ function getMediaType(url) {
 }
 
 function linkify(text) {
-    if (!text) return '';
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, (url) => {
-        // No crear link si es un video de YouTube (porque ya se pondrá el reproductor abajo)
-        if (url.includes('youtube.com') || url.includes('youtu.be')) return url;
-        return `<a href="${url}" target="_blank">${url}</a>`;
-    });
+    return text ? text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:var(--accent)">$1</a>') : '';
 }
 
-// --- LÓGICA DE VIDEOS TIPO TIKTOK ---
-
-let videoObserver;
-function initVideoObserver() {
-    videoObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.play().catch(() => {});
-            } else {
-                entry.target.pause();
-            }
-        });
-    }, { threshold: 0.7 });
-}
-
-function refreshVideoObserver() {
-    const videos = document.querySelectorAll('.feed-video');
-    videos.forEach(v => {
-        videoObserver.observe(v);
-        v.onclick = function() { this.muted = !this.muted; };
-    });
+function formatTimestamp(ts) {
+    const date = new Date(ts);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 }
