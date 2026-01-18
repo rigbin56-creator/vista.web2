@@ -1,146 +1,204 @@
 /**
  * js/feed.js
- * Lógica del Feed con protección de carga infinita
+ * Versión Limpia: Sin loaders, sin esperas, directo al contenido.
  */
 
-// Exponer funciones necesarias
+// Exponer funciones globalmente
 window.publishPost = publishPost;
 window.initFeedListeners = initFeedListeners;
 window.deletePost = deletePost;
 
 const feedContainer = document.getElementById('feedContainer');
-let feedInitialized = false; // evita dobles cargas
+let isListenerAttached = false; // Evita duplicar listeners si se llama dos veces
 
 function initFeedListeners() {
-    if (!feedContainer) return; // No estamos en feed.html
-    if (feedInitialized) return;
+    // Validación básica de existencia del contenedor
+    if (!feedContainer) return;
 
-    const user = window.getCurrentUser();
+    // Si ya estamos escuchando, no hacemos nada (evita duplicados)
+    if (isListenerAttached) return;
 
-    if (!user) {
-        console.warn("⏳ Usuario no listo, esperando auth...");
-        // Reintentar una sola vez cuando Auth termine
-        setTimeout(initFeedListeners, 300);
-        return;
-    }
+    // NO hay chequeo de usuario aquí. Confiamos en que auth.js nos llamó cuando debía.
+    // NO hay loaders (feedContainer.innerHTML = 'Cargando...').
 
-    feedInitialized = true;
-
-    console.log("📡 Cargando recuerdos...");
-    feedContainer.innerHTML =
-        '<div style="text-align:center; padding-top:50px;">🔄 Cargando recuerdos...</div>';
-
+    isListenerAttached = true;
     const db = firebase.database();
-    const postsRef = db.ref('posts');
 
-    // Timeout de seguridad
-    const loadTimeout = setTimeout(() => {
-        if (feedContainer.innerHTML.includes('🔄')) {
-            feedContainer.innerHTML =
-                '<div style="text-align:center; padding:30px; opacity:0.6">La conexión está lenta o no hay datos.</div>';
-        }
-    }, 8000);
-
-    postsRef.limitToLast(100).on('value', (snapshot) => {
-        clearTimeout(loadTimeout);
-        feedContainer.innerHTML = '';
-
+    // Conexión directa a la base de datos
+    db.ref('posts').limitToLast(100).on('value', (snapshot) => {
         const data = snapshot.val();
 
+        // Limpiamos el contenedor solo cuando YA tenemos respuesta
+        feedContainer.innerHTML = '';
+
         if (!data) {
-            feedContainer.innerHTML =
-                '<div style="text-align:center; padding:40px; color:var(--text-dim)">El baúl está vacío.</div>';
+            // Estado vacío sutil (sin spinner)
+            feedContainer.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-dim)">El baúl está vacío.</div>';
             return;
         }
 
-        const posts = Object.values(data).sort(
-            (a, b) => b.timestamp - a.timestamp
-        );
+        // Convertir a array y ordenar (más nuevo primero)
+        const posts = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
 
+        // Renderizar inmediatamente
         posts.forEach(renderPost);
 
-        if (typeof initVideoObserver === 'function') {
-            initVideoObserver();
+        // Activar autoplay de videos si existen
+        if (typeof initVideoObserver === 'function') initVideoObserver();
+    });
+}
+
+/* =========================
+   PUBLICAR POST (Funcionalidad Restaurada)
+   ========================= */
+function publishPost() {
+    const user = window.getCurrentUser();
+    if (!user) return alert("Error: No hay sesión iniciada.");
+
+    // 1. Capturar inputs reales del DOM
+    const textInput = document.getElementById('postTextInput');
+    const mediaInput = document.getElementById('postMediaInput');
+
+    // 2. Validar contenido
+    const content = textInput ? textInput.value.trim() : '';
+    const media = mediaInput ? mediaInput.value.trim() : '';
+
+    if (!content && !media) return alert("El mensaje está vacío.");
+
+    const db = firebase.database();
+    const newKey = db.ref().child('posts').push().key;
+
+    // 3. Estructura de datos compatible con visualización
+    const postData = {
+        id: newKey,
+        authorId: user.id, // ID clave para buscar avatar/color en CONFIG
+        author: user.name, // Fallback de nombre
+        content: content,
+        media: media,
+        type: detectMediaType(media),
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    // 4. Guardar en Firebase
+    db.ref('posts/' + newKey).set(postData, (err) => {
+        if (!err) {
+            // Cerrar panel y limpiar inputs
+            if(typeof window.closePublishPanel === 'function') window.closePublishPanel();
+            if(textInput) textInput.value = '';
+            if(mediaInput) mediaInput.value = '';
+        } else {
+            alert("Error al publicar: " + err.message);
         }
     });
 }
 
 /* =========================
-   PUBLICAR POST
+   RENDER POST (Estética Original Restaurada)
    ========================= */
+function renderPost(post) {
+    // Recuperar estilos del perfil (Avatar, Color) desde CONFIG
+    const profile = (typeof CONFIG !== 'undefined' && CONFIG.PROFILES && CONFIG.PROFILES[post.authorId])
+                    ? CONFIG.PROFILES[post.authorId]
+                    : { name: post.author || 'Anónimo', avatar: 'assets/avatars/default.png', color: '#ccc' };
 
-function publishPost(content, type = "text") {
     const user = window.getCurrentUser();
+    // Verificar propiedad para botón de borrar
+    const isOwner = user && (user.id === post.authorId || user.email === post.email);
 
-    if (!user) {
-        alert("Sesión no iniciada.");
-        return;
+    // Procesar texto y fecha
+    const contentHtml = linkify(post.content);
+    const dateStr = new Date(post.timestamp).toLocaleDateString() + ' ' + new Date(post.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    // Procesar Media (Video vs Imagen vs Youtube)
+    let mediaHtml = '';
+    const safeText = (post.content || '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
+    const youtube = getYoutubeEmbed(post.media || post.content);
+
+    if (youtube) {
+        mediaHtml = `<div class="media-wrapper youtube-container">${youtube}</div>`;
+    } else if (post.media) {
+        // Evento onclick para abrir Lightbox
+        const clickAction = `onclick="if(window.lightbox) window.lightbox.open('${post.type}', '${post.media}', '${safeText}', '${profile.name}', '${dateStr}')"`;
+
+        if (post.type === 'video') {
+            mediaHtml = `
+                <div class="media-wrapper" ${clickAction}>
+                    <video src="${post.media}" class="feed-video" loop muted playsinline preload="metadata"></video>
+                    <div class="mute-indicator">🔇</div>
+                </div>`;
+        } else {
+            mediaHtml = `
+                <div class="media-wrapper" ${clickAction}>
+                    <img src="${post.media}" loading="lazy" alt="media">
+                </div>`;
+        }
     }
 
-    const postData = {
-        uid: user.uid,
-        author: user.displayName || "Anónimo",
-        content: content,
-        type: type,
-        timestamp: Date.now()
-    };
-
-    firebase
-        .database()
-        .ref("posts")
-        .push(postData)
-        .then(() => {
-            console.log("✅ Post publicado");
-        })
-        .catch((err) => {
-            console.error("❌ Error al publicar:", err);
-        });
-}
-
-/* =========================
-   RENDER POST
-   ========================= */
-
-function renderPost(post) {
-    const user = window.getCurrentUser();
-
-    const postEl = document.createElement("div");
-    postEl.className = "post";
-
-    postEl.innerHTML = `
-        <div class="post-header">
-            <strong>${post.author}</strong>
-            <span class="post-date">${new Date(post.timestamp).toLocaleString()}</span>
-        </div>
-        <div class="post-content">${post.content}</div>
+    // HTML ESTRUCTURAL (post-card) para recuperar CSS
+    const html = `
+        <article class="post-card">
+            <div class="post-header">
+                <div class="author-info">
+                    <img src="${profile.avatar}" class="post-avatar" style="border: 2px solid ${profile.color}" onerror="this.src='assets/avatars/default.png'">
+                    <div class="author-text">
+                        <span class="author-name" style="color:${profile.color}">${profile.name}</span>
+                        <span class="post-date">${dateStr}</span>
+                    </div>
+                </div>
+                ${isOwner ? `<button onclick="deletePost('${post.id}')" class="delete-btn" title="Borrar">🗑</button>` : ''}
+            </div>
+            <div class="post-content">${contentHtml}</div>
+            ${mediaHtml}
+        </article>
     `;
 
-    if (user && post.uid === user.uid) {
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Eliminar";
-        deleteBtn.onclick = () => deletePost(post.timestamp);
-        postEl.appendChild(deleteBtn);
-    }
-
-    feedContainer.appendChild(postEl);
+    // Inserción segura en el DOM
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    feedContainer.appendChild(tempDiv.firstElementChild);
 }
 
 /* =========================
    BORRAR POST
    ========================= */
+function deletePost(id) {
+    if(!id) return;
+    if(confirm("¿Borrar recuerdo?")) {
+        firebase.database().ref('posts/'+id).remove()
+            .catch(err => alert(err.message));
+    }
+}
 
-function deletePost(timestamp) {
-    const user = window.getCurrentUser();
-    if (!user) return;
+/* =========================
+   HELPERS VISUALES
+   ========================= */
+function detectMediaType(url) {
+    if (!url) return 'none';
+    if (url.match(/\.(mp4|webm|mov)$/i)) return 'video';
+    return 'image';
+}
 
-    const postsRef = firebase.database().ref("posts");
+function getYoutubeEmbed(url) {
+    if (!url) return null;
+    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+    if (match && match[2].length === 11) {
+        return `<iframe src="https://www.youtube.com/embed/${match[2]}?enablejsapi=1&origin=${window.location.origin}&rel=0" frameborder="0" allowfullscreen></iframe>`;
+    }
+    return null;
+}
 
-    postsRef.once("value", (snapshot) => {
-        snapshot.forEach((child) => {
-            const post = child.val();
-            if (post.timestamp === timestamp && post.uid === user.uid) {
-                child.ref.remove();
-            }
+function linkify(text) {
+    if(!text) return '';
+    return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:var(--accent)">$1</a>');
+}
+
+function initVideoObserver() {
+    const videos = document.querySelectorAll('video.feed-video');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.play().catch(()=>{});
+            else entry.target.pause();
         });
-    });
+    }, { threshold: 0.6 });
+    videos.forEach(v => observer.observe(v));
 }

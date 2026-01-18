@@ -15,8 +15,8 @@ const CONFIG = {
     },
 
     PROFILES: {
-        'rigbin': { name: 'Rigbin', avatar: 'assets/avatars/rigbin.jpg', color: '#bd7ccf', link: 'rigbin.html' },
-        'candy':  { name: 'Candy',  avatar: 'assets/avatars/candy.jpg',  color: '#ff9ce0', link: 'candy.html' }
+        'rigbin': { name: 'Rigbin', avatar: 'assets/avatars/rigbin.jpeg', color: '#bd7ccf', link: 'rigbin.html' },
+        'candy':  { name: 'Candy',  avatar: 'assets/avatars/candy.jpeg',  color: '#ff9ce0', link: 'candy.html' }
     }
 };
 
