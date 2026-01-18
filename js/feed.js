@@ -1,210 +1,161 @@
 /**
  * js/feed.js
- * Lógica del Feed, UI Moderna y Firebase
+ * Lógica del Feed
  */
 
-// --- 1. CONFIGURACIÓN E INICIO ---
-let db;
-const currentUser = UserSystem.getCurrentUser();
+// Exponer funciones globalmente
+window.publishPost = publishPost;
+window.initFeedListeners = initFeedListeners;
+window.deletePost = deletePost;
 
-// Elementos UI
-const feedContainer = document.getElementById('feedList');
-const fabBtn = document.getElementById('fabBtn');
-const createPanel = document.getElementById('createPostPanel');
-const closePanelBtn = document.getElementById('closePanelBtn');
-const publishBtn = document.getElementById('publishBtn');
-const contentInput = document.getElementById('postContent');
-const mediaInput = document.getElementById('mediaUrl');
-const themeBtn = document.getElementById('themeToggle');
-const userAvatar = document.getElementById('currentUserAvatar');
+const feedContainer = document.getElementById('feedContainer');
 
-// Elementos Modal
-const modal = document.getElementById('mediaModal');
-const modalClose = document.querySelector('.modal-close');
-const modalContainer = document.getElementById('modalMediaContainer');
-const modalText = document.getElementById('modalText');
-const modalAuthor = document.getElementById('modalAuthor');
-const modalAvatar = document.getElementById('modalAvatar');
-const modalDate = document.getElementById('modalDate');
+function initFeedListeners() {
+    if (!feedContainer) return;
 
-try {
-    firebase.initializeApp(CONFIG.firebaseConfig);
-    db = firebase.database();
-} catch (e) { console.error("Error Firebase", e); }
+    console.log("📡 Conectando al feed...");
+    feedContainer.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.6">Cargando recuerdos...</div>';
 
-// --- 2. EVENT LISTENERS ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Configurar Avatar Header
-    if(userAvatar) userAvatar.src = currentUser.avatar;
+    const db = firebase.database();
 
-    // Configurar Botón Tema
-    if(themeBtn) {
-        themeBtn.onclick = () => { themeBtn.textContent = ThemeSystem.toggle(); };
-        // Setear icono inicial
-        themeBtn.textContent = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
-    }
-
-    // FAB y Panel
-    fabBtn.onclick = () => createPanel.classList.add('open');
-    closePanelBtn.onclick = () => createPanel.classList.remove('open');
-    publishBtn.onclick = publishPost;
-
-    // Modal Cierres
-    modalClose.onclick = closeModal;
-    // Cerrar con Swipe Down (básico para móvil)
-    let touchStartY = 0;
-    modal.addEventListener('touchstart', e => touchStartY = e.touches[0].clientY);
-    modal.addEventListener('touchend', e => {
-        if (e.changedTouches[0].clientY - touchStartY > 100) closeModal();
-    });
-
-    listenForPosts();
-});
-
-// --- 3. FUNCIONES DE FIREBASE ---
-function publishPost() {
-    const content = contentInput.value.trim();
-    const media = mediaInput.value.trim();
-
-    if (!content && !media) return alert("Escribe algo o pon un link.");
-
-    const newPostKey = db.ref().child('posts').push().key;
-    const postData = {
-        id: newPostKey,
-        authorId: currentUser.id, // Usa el usuario logueado en localStorage
-        content: content,
-        media: media,
-        type: getMediaType(media),
-        timestamp: firebase.database.ServerValue.TIMESTAMP,
-        edited: false
-    };
-
-    db.ref('posts/' + newPostKey).set(postData, (err) => {
-        if (!err) {
-            createPanel.classList.remove('open'); // Cerrar panel
-            contentInput.value = '';
-            mediaInput.value = '';
-        }
-    });
-}
-
-function listenForPosts() {
-    db.ref('posts').limitToLast(50).on('value', (snapshot) => {
+    db.ref('posts').limitToLast(100).on('value', (snapshot) => {
+        feedContainer.innerHTML = ''; // Limpiar loader
         const data = snapshot.val();
-        feedContainer.innerHTML = '';
 
         if (!data) {
-            feedContainer.innerHTML = `<div style="text-align:center; padding:20px; opacity:0.6">Nada por aquí aún...</div>`;
+            feedContainer.innerHTML = '<div style="text-align:center; padding:40px;">El baúl está vacío... sé el primero en publicar.</div>';
             return;
         }
 
         const posts = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
         posts.forEach(renderPost);
-        initVideoObserver();
+
+        // Iniciar observador de videos
+        if (typeof initVideoObserver === 'function') initVideoObserver();
     });
 }
 
-function deletePost(postId) {
-    if(confirm("¿Borrar este recuerdo?")) db.ref('posts/' + postId).remove();
+function publishPost() {
+    const user = window.getCurrentUser();
+    if (!user) return alert("Error: No hay sesión iniciada.");
+
+    const textInput = document.getElementById('postTextInput');
+    const mediaInput = document.getElementById('postMediaInput');
+
+    // Fix: Validar inputs correctamente
+    const content = textInput ? textInput.value.trim() : '';
+    const media = mediaInput ? mediaInput.value.trim() : '';
+
+    if (!content && !media) return alert("El mensaje está vacío.");
+
+    const db = firebase.database();
+    const newKey = db.ref().child('posts').push().key;
+
+    const postData = {
+        id: newKey,
+        authorId: user.id,
+        content: content,
+        media: media,
+        type: detectMediaType(media),
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    db.ref('posts/' + newKey).set(postData, (err) => {
+        if (!err) {
+            if(typeof closePublishPanel === 'function') closePublishPanel();
+            if(textInput) textInput.value = '';
+            if(mediaInput) mediaInput.value = '';
+        } else {
+            alert("Error al publicar: " + err.message);
+        }
+    });
 }
 
-function editPost(postId, currentContent) {
-    const newText = prompt("Editar mensaje:", currentContent);
-    if (newText && newText !== currentContent) {
-        db.ref('posts/' + postId).update({ content: newText, edited: true });
-    }
-}
-
-// --- 4. RENDERIZADO Y MODAL ---
 function renderPost(post) {
-    const author = CONFIG.AUTHORS[post.authorId] || CONFIG.AUTHORS['rigbin'];
-    const isOwner = currentUser.id === post.authorId;
+    const author = CONFIG.PROFILES[post.authorId] || CONFIG.PROFILES['rigbin'];
+    const user = window.getCurrentUser();
+    const isOwner = user && user.id === post.authorId;
+
     const contentHtml = linkify(post.content);
-
     let mediaHtml = '';
-    let mediaClickAttr = ''; // Para abrir modal
 
-    // Preparar Media
-    const ytEmbed = getYoutubeEmbed(post.media || post.content);
+    // Preparar onclick para lightbox (escapando comillas)
+    const safeText = (post.content || '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
+    const dateStr = new Date(post.timestamp).toLocaleDateString();
 
-    if (ytEmbed) {
-        // YouTube no abre modal, se reproduce inline
-        mediaHtml = ytEmbed;
+    // Determinar si es YouTube o archivo directo
+    const youtube = getYoutubeEmbed(post.media || post.content);
+
+    if (youtube) {
+        mediaHtml = `<div class="media-wrapper youtube-container">${youtube}</div>`;
     } else if (post.media) {
-        // Guardamos datos en atributos data- para el modal
-        const safeContent = post.content.replace(/"/g, '&quot;');
-        mediaClickAttr = `onclick="openModal('${post.type}', '${post.media}', '${author.name}', '${author.avatar}', '${formatTimestamp(post.timestamp)}', '${safeContent}')"`;
+        const clickAction = `onclick="if(window.lightbox) window.lightbox.open('${post.type}', '${post.media}', '${safeText}', '${author.name}', '${dateStr}')"`;
 
         if (post.type === 'video') {
             mediaHtml = `
-                <div class="video-wrapper" ${mediaClickAttr}>
+                <div class="media-wrapper" ${clickAction}>
                     <video src="${post.media}" class="feed-video" loop muted playsinline preload="metadata"></video>
-                    <button class="mute-btn" onclick="event.stopPropagation(); toggleMute(this)">🔇</button>
+                    <div class="mute-indicator">🔇</div>
                 </div>`;
         } else {
             mediaHtml = `
-                <div class="media-container" ${mediaClickAttr}>
-                    <img src="${post.media}" loading="lazy" alt="Media">
+                <div class="media-wrapper" ${clickAction}>
+                    <img src="${post.media}" loading="lazy" alt="media">
                 </div>`;
         }
     }
 
-    const article = document.createElement('article');
-    article.className = 'post-card';
-    article.innerHTML = `
-        <div class="post-header">
-            <a href="${author.profileLink}">
-                <img src="${author.avatar}" class="avatar" style="border: 2px solid ${author.color}">
-            </a>
-            <div class="post-info">
-                <span class="author-name" style="color: ${author.color}">${author.name}</span>
-                ${post.edited ? '<span class="edit-tag"> · editado</span>' : ''}
-                <div class="post-meta">${formatTimestamp(post.timestamp)}</div>
+    const html = `
+        <article class="post-card">
+            <div class="post-header">
+                <div class="author-info">
+                    <img src="${author.avatar}" class="post-avatar" style="border: 2px solid ${author.color}">
+                    <div class="author-text">
+                        <span class="author-name" style="color:${author.color}">${author.name}</span>
+                        <span class="post-date">${formatDate(post.timestamp)}</span>
+                    </div>
+                </div>
+                ${isOwner ? `<button onclick="deletePost('${post.id}')" style="background:none;border:none;cursor:pointer;">🗑</button>` : ''}
             </div>
-            ${isOwner ? `
-            <div class="post-menu">
-                <button onclick="editPost('${post.id}', '${post.content.replace(/'/g, "\\'")}')">✎</button>
-                <button onclick="deletePost('${post.id}')" style="color:var(--danger)">🗑</button>
-            </div>` : ''}
-        </div>
-        <div class="post-content">${contentHtml}</div>
-        ${mediaHtml}
+            <div class="post-content">${contentHtml}</div>
+            ${mediaHtml}
+        </article>
     `;
-    feedContainer.appendChild(article);
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    feedContainer.appendChild(tempDiv.firstElementChild);
 }
 
-// --- 5. LÓGICA DEL MODAL ---
-window.openModal = function(type, url, author, avatar, date, text) {
-    modalContainer.innerHTML = '';
-    modalText.innerHTML = linkify(text);
-    modalAuthor.textContent = author;
-    modalAvatar.src = avatar;
-    modalDate.textContent = date;
+function deletePost(id) {
+    if(confirm("¿Borrar?")) firebase.database().ref('posts/'+id).remove();
+}
 
-    if (type === 'video') {
-        const video = document.createElement('video');
-        video.src = url;
-        video.controls = true;
-        video.autoplay = true;
-        video.style.width = '100%';
-        modalContainer.appendChild(video);
-    } else {
-        const img = document.createElement('img');
-        img.src = url;
-        modalContainer.appendChild(img);
+// --- HELPERS INTERNOS ---
+function detectMediaType(url) {
+    if (!url) return 'none';
+    if (url.match(/\.(mp4|webm|mov)$/i)) return 'video';
+    return 'image';
+}
+
+function getYoutubeEmbed(url) {
+    if (!url) return null;
+    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+    if (match && match[2].length === 11) {
+        return `<iframe src="https://www.youtube.com/embed/${match[2]}?enablejsapi=1&origin=${window.location.origin}&rel=0" frameborder="0" allowfullscreen></iframe>`;
     }
-
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden'; // Evitar scroll de fondo
-};
-
-function closeModal() {
-    modal.classList.remove('active');
-    modalContainer.innerHTML = ''; // Limpiar para detener video
-    document.body.style.overflow = '';
+    return null;
 }
 
-// --- 6. UTILIDADES (Videos Observer, Youtube, Linkify) ---
+function linkify(text) {
+    if(!text) return '';
+    return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:var(--accent)">$1</a>');
+}
+
+function formatDate(ts) {
+    return new Date(ts).toLocaleDateString();
+}
+
 function initVideoObserver() {
     const videos = document.querySelectorAll('video.feed-video');
     const observer = new IntersectionObserver((entries) => {
@@ -214,33 +165,4 @@ function initVideoObserver() {
         });
     }, { threshold: 0.6 });
     videos.forEach(v => observer.observe(v));
-}
-
-function toggleMute(btn) {
-    const video = btn.previousElementSibling;
-    video.muted = !video.muted;
-    btn.textContent = video.muted ? "🔇" : "🔊";
-}
-
-function getYoutubeEmbed(url) {
-    if (!url) return null;
-    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-    if (match && match[2].length === 11) {
-        return `<div class="media-container youtube-container"><iframe src="https://www.youtube.com/embed/${match[2]}?rel=0" frameborder="0" allowfullscreen></iframe></div>`;
-    }
-    return null;
-}
-
-function getMediaType(url) {
-    if (!url) return 'none';
-    return url.match(/\.(mp4|webm|mov)$/i) ? 'video' : 'image';
-}
-
-function linkify(text) {
-    return text ? text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:var(--accent)">$1</a>') : '';
-}
-
-function formatTimestamp(ts) {
-    const date = new Date(ts);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 }

@@ -2,83 +2,68 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Feed | Rigbin & Candy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Baúl - Feed</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-    <main class="container">
-        <div class="compose-box">
-            <div style="margin-bottom: 10px;">
-                <label style="font-size: 0.8rem; color: var(--text-dim);">Publicando como:</label>
-                <select id="authorSelect" style="background:transparent; color:white; border:none; font-weight:bold;">
-                    </select>
+    <header class="app-header">
+        <nav class="header-nav">
+            <a href="index.html" class="nav-item">Home</a>
+            <a href="feed.html" class="nav-item active">Feed</a>
+            <a href="gallery.html" class="nav-item">Galería</a>
+        </nav>
+        <div class="header-profile">
+            <div id="headerProfileBtn" style="cursor:pointer">
+                <img id="headerProfileImg" src="" class="profile-btn" style="display:none">
+                <div id="headerIconPlaceholder" class="profile-placeholder profile-btn">👤</div>
             </div>
-
-            <textarea id="postContent" placeholder="¿Qué quieres guardar hoy?"></textarea>
-            <input type="text" id="mediaUrl" placeholder="Pegar URL de imagen o video (opcional)"
-                   style="width:100%; background:rgba(0,0,0,0.2); border:none; color:white; padding:8px; margin-top:10px; border-radius:6px;">
-
-            <div style="margin-top: 10px; text-align: right;">
-                <button class="btn btn-primary" onclick="publishPost()">Publicar</button>
+            <div id="profileDropdown" class="profile-dropdown">
+                <a id="myProfileLink" href="#" class="dropdown-item" style="display:none"><span>👤</span> Ver Perfil</a>
+                <div id="themeToggleBtn" class="dropdown-item"><span>🌓</span> Tema</div>
+                <div class="dropdown-divider"></div>
+                <div id="loginBtn" class="dropdown-item" onclick="loginWithGoogle()"><span>🔑</span> Iniciar Sesión</div>
+                <div id="logoutBtn" class="dropdown-item" onclick="logout()" style="display:none"><span>🚪</span> Cerrar Sesión</div>
             </div>
         </div>
+    </header>
 
-        <div id="feedList"></div>
+    <main id="feedContainer" class="feed-container">
+        <div style="text-align:center; padding-top:50px;">🔄 Conectando...</div>
     </main>
 
-    <body>
-        <header class="app-header">
-            <div class="header-left">
-                <span id="themeToggle" class="icon-btn">🌙</span>
-            </div>
-            <nav class="header-nav">
-                <a href="index.html" class="nav-item">Home</a>
-                <a href="feed.html" class="nav-item active">Feed</a>
-                <a href="gallery.html" class="nav-item">Galería</a>
-            </nav>
-            <div class="header-right">
-                <img id="currentUserAvatar" src="" class="mini-avatar" onclick="UserSystem.login(UserSystem.getCurrentUser().id === 'rigbin' ? 'candy' : 'rigbin')">
-            </div>
-        </header>
+    <button id="fabBtn" class="fab hidden"><span>+</span></button>
 
-        <main id="feedList" class="feed-container"></main>
-
-        <button id="fabBtn" class="fab">
-            <span>+</span>
-        </button>
-
-        <div id="createPostPanel" class="create-panel">
-            <div class="panel-header">
-                <h3>Nuevo Recuerdo</h3>
-                <button id="closePanelBtn">✕</button>
-            </div>
-            <div class="panel-body">
-                <textarea id="postContent" placeholder="¿Qué estás pensando?"></textarea>
-                <input type="text" id="mediaUrl" placeholder="Link de imagen, video o YouTube...">
-                <button id="publishBtn" class="btn-primary">Publicar</button>
-            </div>
+    <div id="publishPanel" class="publish-panel">
+        <div class="panel-head">
+            <h3>Nuevo Recuerdo</h3>
+            <button onclick="closePublishPanel()" style="background:none;border:none;font-size:1.5rem;color:var(--text-main)">✕</button>
         </div>
+        <textarea id="postTextInput" class="panel-input" rows="3" placeholder="¿Qué nos cuentas?"></textarea>
+        <input type="text" id="postMediaInput" class="panel-input" placeholder="URL imagen/video...">
+        <button onclick="publishPost()" class="publish-btn">Publicar</button>
+    </div>
 
-        <div id="mediaModal" class="media-modal">
-            <button class="modal-close">✕</button>
-            <div class="modal-content">
-                <div id="modalMediaContainer"></div>
-                <div class="modal-info">
-                    <div class="modal-meta">
-                        <img id="modalAvatar" src="" class="mini-avatar">
-                        <span id="modalAuthor"></span>
-                        <span id="modalDate" class="date-dim"></span>
-                    </div>
-                    <p id="modalText"></p>
-                </div>
-            </div>
-        </div>
+    <div id="mediaLightbox" class="lightbox">
+        <button class="lightbox-close">✕</button>
+        <div id="lightboxContent" class="lightbox-content"></div>
+        <div id="lightboxInfo" class="lightbox-info"></div>
+    </div>
 
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-        <script src="js/config.js"></script>
-        <script src="js/feed.js"></script>
-    </body>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/feed.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initAuth(); // Arranca auth listener
+            initUI();   // Arranca eventos visuales
+        });
+    </script>
+</body>
 </html>

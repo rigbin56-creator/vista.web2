@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Candy</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<style>
+/* 4. CONTENEDOR PRINCIPAL */
+main.profile-container {
+    max-width: 800px; margin: 20px auto;
+    background: rgba(93, 23, 0);
+    backdrop-filter: blur(5px);
+    border: 2px dotted #f1beff;
+    border-radius: 15px; padding: 20px;
+    color: white;
+}
+
+/* 5. TEXTOS Y CABECERAS */
+h1 {
+    font-size: 45px !important; font-family: 'Paytone One', sans-serif;
+    background: -webkit-linear-gradient(#BA3E07, #FFB730);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-align: center; animation: floating 3s infinite ease-in-out;
+}
+
+.section-header {
+    background: rgba(168, 51, 24, 0.4);
+    border: 2px dotted rgba(218, 165, 255, 0.65);
+    border-radius: 10px; padding: 5px 15px; margin: 15px 0;
+    font-family: 'Paytone One', sans-serif; color: white;
+    text-transform: lowercase;
+}
+
+/* 6. ANIMACIONES */
+@keyframes floating {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+}
+
+/* 7. MUSICA (MINI PLAYER) */
+.music-player {
+    background: #000; border: 1px dashed #ff9ce0;
+    padding: 10px; margin: 10px 0; border-radius: 5px;
+    display: flex; align-items: center; gap: 10px;
+}
+
+/* 8. GRID DE STAMPS Y USERBOXES */
+.stamp-grid {
+    display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
+    margin-top: 10px;
+}
+.stamp-grid img { height: 35px; border: 1px solid rgba(255,255,255,0.2); }
+
+.userbox-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px; margin: 20px 0;
+}
+.userbox-grid img { width: 100%; border-radius: 5px; transition: 0.3s; }
+.userbox-grid img:hover { transform: scale(1.1) rotate(2deg); }
+
+/* EASTER EGG: AMONG US */
+.amongus-secret {
+    position: absolute; width: 15px; opacity: 0; cursor: help;
+}
+.amongus-secret:hover { opacity: 1; filter: drop-shadow(0 0 5px red); }
+</style>
+</head>
+<body>
+
+<header style="background: rgba(0,0,0,0.5);">
+<nav>
+    <ul style="display:flex; justify-content:center; gap:20px; list-style:none; padding:10px;">
+        <li><a href="index.html">⌂ HOME</a></li>
+        <li><a href="feed.html">⌗ FEED</a></li>
+    </ul>
+</nav>
+</header>
+
+<main class="profile-container">
+<div style="text-align: center;">
+    <h1>Candy</h1>
+    <img src="assets/avatars/candy.jpeg"
+         style="width:150px; border-radius:50%; border: 3px dashed #ff9ce0; box-shadow: 0 0 15px #ff75d1;">
+    <p style="font-family: 'Patrick Hand'; font-size: 1.2rem; color: #ffedf9; margin-top:10px;">
+        "Explorando el vacío, un píxel a la vez"
+    </p>
+</div>
+
+<div class="music-player">
+    <span style="font-size:20px;">🎶</span>
+    <marquee scrollamount="3" style="font-family: monospace; color: #0f0;">
+        "Reproduciendo" ahora: Crystal Castles - Kerosene.mp3 (128kbps) ---------- [|||||||||||]
+    </marquee>
+</div>
+
+<div style="display: flex; gap: 20px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 250px;">
+        <div class="section-header">Contactando a Candy</div>
+        <div style="border: 1px dashed #ff75d1; padding: 10px; font-size: 0.8rem;">
+            ⭐ Agregar a Amigos <br>
+            🌟 Añadir a Favoritos <br>
+            🌠 Enviar Mensaje <br>
+            <span class="amongus-secret">ඞ</span>👾 Bloquear Usuario
+        </div>
+
+        <div class="section-header">Intereses</div>
+        <div style="font-size: 0.9rem; padding: 10px; background: rgba(0,0,0,0.2);">
+            <p><b>General:</b> Programar, Pizza, Noches de lluvia.</p>
+            <p><b>Música:</b> Breakcore, Lo-fi, 8-bit.</p>
+        </div>
+    </div>
+
+    <div style="flex: 2; min-width: 300px;">
+        <div class="section-header">Blurbs</div>
+        <p style="color: #ffedf9; font-weight: bold;">Sobre mí:</p>
+        <p style="font-size: 14px;">Bienvenido a mi rincón digital. Soy Rigbin, entusiasta de lo retro y guardián de este baúl. Si encuentras el impostor, dímelo.</p>
+
+        <div class="section-header">User Boxes</div>
+        <div class="userbox-grid">
+            <img src="https://external-media.spacehey.net/media/s1q3LSXqWhymlze4FPSjCbcGIUW7Hqf5pUKe8a4ESfOY=/https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/cf2836cb-5893-4a6c-b156-5a89d94fc721/dbjm1vo-98cea26c-4a92-4a9e-8f3c-be86f22108de.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcL2NmMjgzNmNiLTU4OTMtNGE2Yy1iMTU2LTVhODlkOTRmYzcyMVwvZGJqbTF2by05OGNlYTI2Yy00YTkyLTRhOWUtOGYzYy1iZTg2ZjIyMTA4ZGUuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.O9_FSdT-73GpCjAdhuy2V6EjYMsCUJqqQ33vGjnmRM0" height="135px">
+            <img src="https://external-media.spacehey.net/media/srUPAu4P5KwEK2GZFu3NwwQ8vYugX1DXUIHJ5ahx0nqo=/https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/cf2836cb-5893-4a6c-b156-5a89d94fc721/dbjisxg-1ef73799-ae5a-4d75-b6c6-147a26c89b20.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcL2NmMjgzNmNiLTU4OTMtNGE2Yy1iMTU2LTVhODlkOTRmYzcyMVwvZGJqaXN4Zy0xZWY3Mzc5OS1hZTVhLTRkNzUtYjZjNi0xNDdhMjZjODliMjAuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.jLekLfRYt8QPztVct1aTJ4e4C9ECWtUy4YdX1j6RHKk">
+            <img src="https://collection.ju.mp/assets/images/gallery23/3440391d_original.jpg?v=0236594d">
+            <img src="https://collection.ju.mp/assets/images/gallery23/d9c1dbae_original.jpg?v=0236594d">
+        </div>
+    </div>
+</div>
+
+<div class="section-header" style="text-align:center;">My Stamps</div>
+<div class="stamp-grid">
+    <img src="https://64.media.tumblr.com/7d9a895b3dc03381b5d5cf278d80bad7/98ab3dff3b1c6819-49/s100x200/0182d531434d7aa9b74a72747859629d634d1185.gifv">
+    <img src="https://64.media.tumblr.com/f197b651a828df47b36f4aff0928478d/b00c6a9cc9494f43-a5/s100x200/92a8d1e32b4fd5e222d77cd070c407dc1f9bca38.gifv">
+    <img src="https://64.media.tumblr.com/730ce2825e3e6d4c774a8385ebe8bc3b/b00c6a9cc9494f43-0c/s100x200/deb7bfec3402519dff0792f95927687939925833.gifv">
+    <img src="https://64.media.tumblr.com/7a1ed336c838c6f8f82d39de79c5e16a/c47c936f31465ded-8d/s250x400/e66d4abc361c6f893cc97fdd24d568dccd3ba5da.gifv">
+    <img src="https://files.catbox.moe/ug2wvw.png">
+    <img src="https://files.catbox.moe/bu98vz.png">
+</div>
+
+<style>
+html:before {
+  animation: grain 8s steps(10) infinite;
+  background-image: url(http://dl2.glitter-graphics.net/pub/711/711492quxsntt3op.gif);
+  content: "";
+  height: 300%;
+  left: -50%;
+  opacity:.2;
+  position: fixed;
+  top: -110%;
+  width: 300%;
+  pointer-events:none;
+}
+@keyframes grain {
+  0%, 100% { transform:translate(0, 0) }
+  10% { transform:translate(-5%, -10%) }
+  20% { transform:translate(-15%, 5%) }
+  30% { transform:translate(7%, -25%) }
+  40% { transform:translate(-5%, 25%) }
+  50% { transform:translate(-15%, 10%) }
+  60% { transform:translate(15%, 0%) }
+  70% { transform:translate(0%, 15%) }
+  80% { transform:translate(3%, 35%) }
+  90% { transform:translate(-10%, 10%) }
+} </style>
+
+<style>:root {
+        --logo-blue: light purple ;
+        --darker-blue: light purple ;
+        --lighter-blue: light purple ;
+        --even-lighter-blue: light purple ;
+        --lightest-blue: light purple ;
+        --dark-orange: light purple ;
+        --light-orange: light purple ;
+        --even-lighter-orange: transparent ;
+</style>
+
+<style> nav {
+  overflow-x: hidden;
+  position: middle;
+
+}
+
+nav .top {
+  background: transparent;
+}
+
+nav .links {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+
+<style>main:before {
+	width: 100%;
+	height: 300px ;
+	display: block;
+	content: "";
+	background-image: url('https://i.imgur.com/7rFiyxM.gif');
+	background-position: center center;
+	background-size: cover;
+}
+@media only screen and (max-width: 600px) {
+	main:before{
+		height: 200px;
+	}
+}</style>
+
+<style>
+
+body {
+
+font-family: Courier;
+font-size: 15pt;
+font-weight: bold;
+font-style: normal;
+text-decoration: none;
+}
+
+
+
+h1 {
+  color: black;
+  text-shadow: 1px 1px 2px black, 0 0 25px purple, 0 0 5px gold;
+}
+
+h1, h2, h3, h4,p {color: lightgreen;}
+
+:root {
+
+--black: white;
+</style>
+
+
+
+
+<style>
+#comments .inner {
+    max-height: 545px;
+    overflow: scroll;
+}
+</style>
+
+<style>
+#comments{
+    background-image: url(http://dl6.glitter-graphics.net/pub/3267/3267306k4lmryk92c.gif);
+    background-size: 100%;
+    Height:300px;
+    overflow:auto;
+}
+.comments-table{
+    background-color:transparent rgba(30,35,40,.9);
+}
+#comments img{
+    border-radius: none !important;
+    border: none !important;
+}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>table table table td img { display:inline; }table td td{ width:0; } table { width:450px; } table table { width:auto; } table table td { padding:3px; } table table table td { padding:0; } table table table { width:220px!important; height:0; } td.text td a img { width:auto!important; } table table table table table, table table table table table td { width:0!important; padding:0!important; } td.text a img { width:100px!important; } td.text td.text a img { width:35px!important; } td td td div strong { width:170px!important; display:block; } embed,object { display:block;width:220px;height:38px; } table table td img, td.text td.text .orangetext15, td.text td.text table table div { display:none; }</style>
+
+
+
+
+
+<style>
+main{background: transparent} table, tr, td { background-color:transparent;}div table tr td {background-color: BD9D00 !important;}div table tr td a:link, div table tr td a:visited, div table tr td a:hover {color: DDCCEE !important; font-weight: bold !important;}table {background-color: transparent !important;}table table table td {background-color: A50000 !important;}table table table table td {color: FFFFFF !important;}.clearfix {background-color: 000000 !important;}.profileInfo {border: 000000 2px solid !important;}.interestsAndDetails, .userProfileDetail, .contactTable {background-color: 000000 !important; border: BD9D00 2px solid !important; width: 200px !important;}.extendedNetwork , .latestBlogEntry, .blurbs, .friendSpace,.friendsComments {background-color: 000000 !important; border: FF0000 2px solid !important;}span, .btext, .redtext15 {background-color: transparent !important;}a {font-weight: normal !important; color: FF9BD4 !important;}b, span, .btext, .orangetext15, .whitetext12  {color: transparent !important;}.text  {color: 000000 !important;}.blacktext8 {color: FF0000 !important;}a.text:link, a.text:visited {font-weight: bold; color:FF0000 !important;}div object {background-color: A50000 !important; border: FF0000 2px solid !important;}ul li div span div {background-color: FF0000 !important; border: FF0000 2px solid !important;}table.contactTable tr td.text {background-color: 000000 !important;}table.contactTable td.tdborder table td{background-color: 000000 !important;}table.contactTable td.tdborder{background-color: 000000 !important;}div ul li a.open:link,div ul li a.open:visited,div ul li a.open:hover{background-color: 1548ae !important;}div ul li small{color: FF0000 !important;}.bodyContent{background-color: transparent;}body {background:url(http://dl6.glitter-graphics.net/pub/3267/3267306k4lmryk92c.gif);background-attachment:fixed;background-repeat:repeat;}table tr td div, div div a.text:link, div div a.text:visited, div div a.text:hover, div div a.text:active, div div p a:link, div div p a:visited, div div p a:hover, div div p a:active {color: FFFFFF !important;}
+
+
+
+
+
+
+
+
+.profile .contact { background: url(http://dl6.glitter-graphics.net/pub/3267/3267306k4lmryk92c.gif);
+background-size: cover;
+background-position: center;
+}
+
+ </style>
+
+<style>body:before {
+	content: " ";
+	height: 100vh;
+	width: 100vw;
+	display: block;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 100;
+	background-image: url('http://dl6.glitter-graphics.net/pub/3267/3267306k4lmryk92c.gif');
+	background-size: cover;
+	background-repeat: no-repeat;
+	animation: yourAnimation 3s ease 0s 1 normal forwards;
+	pointer-events: none;
+}
+@keyframes yourAnimation { 0.0%{ opacity: 1;} 75%{ opacity: 1; } 100%{ opacity: 0;} }
+<style/></style>
+
+<style>
+footer {
+border-radius: 15px;
+background-image: url(http://dl6.glitter-graphics.net/pub/3267/3267306k4lmryk92c.gif);
+}
+</style>
+
+<style>
+/* profile-info */
+
+.profile-info {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    border: 0;
+    z-index: 20;
+    -webkit-backdrop-filter: blur(20px);
+}
+.profile-info a {
+    color: #FFF;
+}
+
+
+.profile-info { border:double 0px #Ffd1dc88;
+-moz-border-radius: 0px;
+-webkit-border-radius: 0px;
+border-radius: 0px;
+background: transparent url(http://dl9.glitter-graphics.net/pub/185/185499fkwlunybl0.gif) no-repeat center center;
+background-size: contain;
+    </style>
+
+</main>
+
+<footer style="text-align: center; padding: 20px; font-size: 0.7rem; opacity: 0.6;">
+Rigbin &copy; 2026 - Hecho con 💜 y mucho código basura.
+</footer>
+
+</body>
+</html>

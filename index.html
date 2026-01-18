@@ -2,60 +2,55 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nosotros | Rigbin & Candy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baúl de Recuerdos</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <header>
-        <div class="container">
-            <nav>
-                <ul>
-                    <li><a href="index.html" class="active">Home</a></li>
-                    <li><a href="#">Nosotros</a></li> <li><a href="gallery.html">Galería</a></li>
-                    <li><a href="feed.html">Feed</a></li>
-                </ul>
-            </nav>
+    <header class="app-header">
+        <nav class="header-nav">
+            <a href="index.html" class="nav-item active">Home</a>
+            <a href="feed.html" class="nav-item">Feed</a>
+            <a href="gallery.html" class="nav-item">Galería</a>
+        </nav>
+        <div class="header-profile">
+            <div id="headerProfileBtn">
+                <img id="headerProfileImg" src="" class="profile-btn" style="display:none">
+                <div id="headerIconPlaceholder" class="profile-placeholder profile-btn">👤</div>
+            </div>
+            <div id="profileDropdown" class="profile-dropdown">
+                <a id="myProfileLink" href="#" class="dropdown-item" style="display:none"><span>👤</span> Ver mi perfil</a>
+                <div id="themeToggleBtn" class="dropdown-item"><span>🌓</span> <span id="themeLabel">Cambiar Tema</span></div>
+                <div class="dropdown-divider"></div>
+                <div id="loginBtn" class="dropdown-item" onclick="loginWithGoogle()"><span>🔑</span> Iniciar Sesión</div>
+                <div id="logoutBtn" class="dropdown-item" onclick="logout()" style="display:none"><span>🚪</span> Cerrar Sesión</div>
+            </div>
         </div>
     </header>
 
-    <main class="container">
-      <section style="margin-top: 30px; margin-bottom: 30px;">
-      <h2 style="font-size: 1.2rem; margin-bottom: 15px; border-left: 3px solid var(--text-main); padding-left: 10px;">Protagonistas</h2>
-      <div style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
-
-          <a href="rigbin.html" class="profile-card-home" style="border-color: var(--accent-1);">
-              <img src="assets/avatars/rigbin.jpeg" alt="Rigbin">
-              <div class="info">
-                  <span style="color: var(--accent-1);">Rigbin</span>
-                  <small>Ver mundo</small>
-              </div>
-          </a>
-
-          <a href="candy.html" class="profile-card-home" style="border-color: var(--accent-2);">
-              <img src="assets/avatars/candy.jpeg" alt="Candy">
-              <div class="info">
-                  <span style="color: var(--accent-2);">Candy</span>
-                  <small>Ver mundo</small>
-              </div>
-          </a>
-
-      </div>
-  </section>
-
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-      <a href="gallery.html" class="post-card link-card">
-          <h3>📸 Galería</h3>
-          <p>Nuestros momentos</p>
-      </a>
-      <a href="games.html" class="post-card link-card"> <h3>🎮 Juegos</h3>
-          <p>Tres en Raya</p>
-      </a>
-  </div>
+    <main style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; text-align:center; padding:20px;">
+        <h1>Baúl de Recuerdos</h1>
+        <p style="color:var(--text-dim); max-width:400px;">
+            Un espacio privado y compartido para guardar momentos, videos e historias.
+        </p>
+        <br>
+        <a href="feed.html" class="publish-btn" style="text-decoration:none; width:auto; padding: 12px 30px;">
+            Ir al Baúl
+        </a>
     </main>
 
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="js/config.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initAuth();
+            initUI();
+        });
+    </script>
 </body>
 </html>
