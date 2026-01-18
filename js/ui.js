@@ -3,6 +3,11 @@
  * Interfaz Gráfica y Eventos
  */
 
+ // Agrega esto al inicio de js/ui.js si no estaba explícito
+ window.updateUIForLogin = updateUIForLogin;
+ window.updateUIForLogout = updateUIForLogout;
+ window.initUI = initUI;
+
 // Hacer Lightbox global
 window.lightbox = {
     open: function(type, url, text, author, date) {

@@ -1,77 +1,110 @@
 /**
  * js/auth.js
- * Autenticación y Whitelist
+ * Manejo robusto de Autenticación y Sincronización
  */
 
-// Hacemos las funciones accesibles globalmente para el HTML
+// Exponer funciones globalmente
 window.loginWithGoogle = loginWithGoogle;
 window.logout = logout;
+window.initAuth = initAuth;
 
 let currentUserProfile = null;
 
 function initAuth() {
-    const auth = firebase.auth();
-    auth.onAuthStateChanged(handleAuthState);
-}
-
-function handleAuthState(user) {
-    if (user) {
-        checkWhitelist(user.email);
-    } else {
-        currentUserProfile = null;
-        if (typeof updateUIForLogout === 'function') updateUIForLogout();
-        // Si estamos en feed, mostrar mensaje de que se requiere login
-        const feedEl = document.getElementById('feedContainer');
-        if (feedEl) feedEl.innerHTML = '<div style="text-align:center; padding:40px;">🔒 Inicia sesión para ver el baúl.</div>';
-    }
+    // Escuchar cambios de sesión en tiempo real
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            // Usuario detectado por Firebase -> Verificar Whitelist
+            checkWhitelist(user.email);
+        } else {
+            // No hay usuario -> Limpiar estado
+            currentUserProfile = null;
+            handleLogoutState();
+        }
+    });
 }
 
 function checkWhitelist(email) {
-    // Reemplaza puntos por comas si tu DB las guarda así, o busca directo
+    // Referencia a la lista de permitidos
     firebase.database().ref('allowedUsers').once('value')
         .then(snapshot => {
             const users = snapshot.val();
-            // Lógica simple: verificar si el email existe en el objeto
+            // Buscar si el email existe en la DB
             if (users && users[email]) {
-                const role = users[email];
+                const role = users[email]; // 'rigbin' o 'candy'
                 loginSuccess(role, email);
             } else {
-                alert("Acceso denegado. Tu email no está en la lista.");
+                alert("Acceso denegado. Tu email no está autorizado.");
                 firebase.auth().signOut();
+                handleLogoutState();
             }
         })
-        .catch(err => console.error("Error Whitelist:", err));
+        .catch(err => {
+            console.error("Error verificando whitelist:", err);
+            handleLogoutState();
+        });
 }
 
 function loginSuccess(role, email) {
+    console.log("✅ Autorizado como:", role);
+
+    // 1. Guardar perfil en memoria
     currentUserProfile = {
         id: role,
         email: email,
         ...CONFIG.PROFILES[role]
     };
 
-    // Actualizar UI
-    if (typeof updateUIForLogin === 'function') updateUIForLogin(currentUserProfile);
+    // 2. Actualizar la UI (Botones, Avatar)
+    if (typeof window.updateUIForLogin === 'function') {
+        window.updateUIForLogin(currentUserProfile);
+    }
 
-    // CARGAR EL FEED AHORA QUE TENEMOS PERMISO
+    // 3. Si estamos en la página del Feed, forzar la carga AHORA
     if (typeof window.initFeedListeners === 'function') {
         window.initFeedListeners();
     }
 }
 
+function handleLogoutState() {
+    if (typeof window.updateUIForLogout === 'function') {
+        window.updateUIForLogout();
+    }
+
+    // Si estamos en el feed y no hay usuario, mostrar mensaje de bloqueo
+    const feedContainer = document.getElementById('feedContainer');
+    if (feedContainer) {
+        feedContainer.innerHTML = `
+            <div style="text-align:center; padding:50px; color:var(--text-dim);">
+                🔒 <strong>Contenido Privado</strong><br><br>
+                Debes iniciar sesión para ver los recuerdos.
+            </div>
+        `;
+    }
+}
+
+// --- ACCIONES DEL USUARIO ---
+
 function loginWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider).catch(error => {
-        console.error("Error login:", error);
-        alert("Error al iniciar sesión: " + error.message);
-    });
+    firebase.auth().signInWithPopup(provider)
+        .then((result) => {
+            // LOGIN EXITOSO MANUAL
+            // Recargamos la página para asegurar que todo esté limpio y sincronizado
+            console.log("Login exitoso, recargando...");
+            window.location.reload();
+        })
+        .catch((error) => {
+            console.error("Error login:", error);
+            alert("Error al iniciar sesión: " + error.message);
+        });
 }
 
 function logout() {
     firebase.auth().signOut().then(() => {
-        location.reload();
+        window.location.reload(); // Recargar para limpiar cache y UI
     });
 }
 
-// Exportar para uso en otros scripts
+// Helper para obtener usuario actual
 window.getCurrentUser = () => currentUserProfile;

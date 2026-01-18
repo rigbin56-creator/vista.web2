@@ -43,13 +43,26 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <script src="js/config.js"></script>
+
     <script src="js/auth.js"></script>
+
     <script src="js/ui.js"></script>
+
+    <script src="js/feed.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            initAuth();
-            initUI();
+            console.log("🚀 Iniciando sistema...");
+
+            // 1. Iniciar UI (Listeners de botones, tema, etc.)
+            if (typeof initUI === 'function') initUI();
+
+            // 2. Iniciar Auth (Esto disparará el check de sesión)
+            // Cuando Auth termine, él mismo llamará a initFeedListeners() si corresponde
+            if (typeof initAuth === 'function') initAuth();
+            else console.error("❌ Error CRÍTICO: auth.js no cargó correctamente.");
         });
     </script>
 </body>
