@@ -51,7 +51,7 @@ function publishPost() {
     const postData = {
         id: newKey,
         authorId: user.id || 'unknown',
-        author: user.name || user.email || 'Anónimo', // Evita "undefined"
+        author: CONFIG.PROFILES[user.id]?.name || user.email,
         content: content,
         media: media,
         type: detectMediaType(media),

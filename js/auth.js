@@ -43,6 +43,8 @@ function loginSuccess(role, email) {
         ...CONFIG.PROFILES[role]
     };
 
+    console.log("PERFIL LOGUEADO:", currentUserProfile); // 👈 ESTA LÍNEA
+
     if (typeof window.updateUIForLogin === 'function') {
         window.updateUIForLogin(currentUserProfile);
     }
