@@ -22,9 +22,14 @@ function initAuth() {
 
 function checkWhitelist(email) {
     const safeEmail = email.replace(/\./g, '_');
+
     firebase.database().ref('allowedUsers/' + safeEmail).once('value')
         .then(snapshot => {
-            const role = snapshot.val(); // Devuelve 'rigbin' o 'candy'
+            const data = snapshot.val();
+
+            // 🔴 FIX REAL: puede ser string o objeto
+            const role = typeof data === 'string' ? data : data?.role;
+
             if (role) {
                 loginSuccess(role, email);
             } else {
@@ -36,14 +41,14 @@ function checkWhitelist(email) {
 }
 
 function loginSuccess(role, email) {
-    // CORRECCIÓN: id debe ser el role para que CONFIG.PROFILES[post.authorId] funcione
+    // ✅ id SIEMPRE string ('rigbin' / 'candy')
     currentUserProfile = {
         id: role,
         email: email,
         ...CONFIG.PROFILES[role]
     };
 
-    console.log("PERFIL LOGUEADO:", currentUserProfile); // 👈 ESTA LÍNEA
+    console.log("PERFIL LOGUEADO:", currentUserProfile);
 
     if (typeof window.updateUIForLogin === 'function') {
         window.updateUIForLogin(currentUserProfile);
@@ -63,9 +68,6 @@ function handleLogoutState() {
 function loginWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider)
-        .then(() => {
-            // Dejamos que onAuthStateChanged maneje la carga
-        })
         .catch(error => alert("Error: " + error.message));
 }
 
