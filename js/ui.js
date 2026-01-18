@@ -1,12 +1,15 @@
 /**
  * js/ui.js
- * Corrección: Fallback defensivo en updateUIForLogin
+ * UI completa restaurada + corrección de rutas de avatar
  */
 
 window.updateUIForLogin = updateUIForLogin;
 window.updateUIForLogout = updateUIForLogout;
 window.initUI = initUI;
 
+/* =========================
+   LIGHTBOX (NO TOCAR)
+   ========================= */
 window.lightbox = {
     open: function(type, url, text, author, date) {
         const lb = document.getElementById('mediaLightbox');
@@ -17,12 +20,15 @@ window.lightbox = {
         content.innerHTML = '';
         if (type === 'video') {
             const v = document.createElement('video');
-            v.src = url; v.controls = true; v.autoplay = true;
+            v.src = url;
+            v.controls = true;
+            v.autoplay = true;
             v.className = 'lightbox-media';
             content.appendChild(v);
         } else {
             const i = document.createElement('img');
-            i.src = url; i.className = 'lightbox-media';
+            i.src = url;
+            i.className = 'lightbox-media';
             content.appendChild(i);
         }
 
@@ -38,11 +44,17 @@ window.lightbox = {
     }
 };
 
+/* =========================
+   PANEL PUBLICAR
+   ========================= */
 window.closePublishPanel = () => {
     const p = document.getElementById('publishPanel');
     if(p) p.classList.remove('active');
 };
 
+/* =========================
+   INIT UI
+   ========================= */
 function initUI() {
     const fab = document.getElementById('fabBtn');
     if(fab) fab.onclick = () => document.getElementById('publishPanel').classList.add('active');
@@ -66,9 +78,13 @@ function initUI() {
 
     const themeBtn = document.getElementById('themeToggleBtn');
     if(themeBtn) themeBtn.onclick = toggleTheme;
+
     applyStoredTheme();
 }
 
+/* =========================
+   LOGIN / LOGOUT UI
+   ========================= */
 function updateUIForLogin(user) {
     const img = document.getElementById('headerProfileImg');
     const ph = document.getElementById('headerIconPlaceholder');
@@ -78,14 +94,16 @@ function updateUIForLogin(user) {
     const myProfile = document.getElementById('myProfileLink');
 
     if(img) {
-        // 🔽 CORRECCIÓN: Fallback para evitar error si no hay avatar
-        img.src = user.avatar || 'assets/avatars/default.gif';
+        // ✅ RUTA CORRECTA Y ÚNICA
+        img.src = user.avatar || 'assets/avatars/default.png';
         img.style.display = 'block';
     }
+
     if(ph) ph.style.display = 'none';
     if(loginBtn) loginBtn.style.display = 'none';
     if(logoutBtn) logoutBtn.style.display = 'flex';
     if(fab) fab.classList.remove('hidden');
+
     if(myProfile) {
         myProfile.href = user.link || '#';
         myProfile.style.display = 'flex';
@@ -100,7 +118,11 @@ function updateUIForLogout() {
     const logoutBtn = document.getElementById('logoutBtn');
     const myProfile = document.getElementById('myProfileLink');
 
-    if(img) img.style.display = 'none';
+    if(img) {
+        img.style.display = 'none';
+        img.src = '';
+    }
+
     if(ph) ph.style.display = 'flex';
     if(loginBtn) loginBtn.style.display = 'flex';
     if(logoutBtn) logoutBtn.style.display = 'none';
@@ -108,11 +130,19 @@ function updateUIForLogout() {
     if(myProfile) myProfile.style.display = 'none';
 }
 
+/* =========================
+   TEMA
+   ========================= */
 function toggleTheme() {
     document.body.classList.toggle('light-mode');
-    localStorage.setItem('baul_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    localStorage.setItem(
+        'baul_theme',
+        document.body.classList.contains('light-mode') ? 'light' : 'dark'
+    );
 }
 
 function applyStoredTheme() {
-    if(localStorage.getItem('baul_theme') === 'light') document.body.classList.add('light-mode');
+    if(localStorage.getItem('baul_theme') === 'light') {
+        document.body.classList.add('light-mode');
+    }
 }
