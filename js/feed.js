@@ -54,6 +54,8 @@ function initFeedListeners() {
     });
 }
 
+window.publishPost = publishPost;
+
 // ... (El resto de funciones: publishPost, renderPost, deletePost, etc. se mantienen igual que la versión anterior) ...
 // Asegúrate de copiar el resto del contenido de js/feed.js que te pasé en la respuesta anterior para completar el archivo.
 // Solo asegúrate de que renderPost use window.getCurrentUser()

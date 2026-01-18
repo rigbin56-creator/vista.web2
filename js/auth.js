@@ -25,13 +25,14 @@ function initAuth() {
 }
 
 function checkWhitelist(email) {
-    // Referencia a la lista de permitidos
-    firebase.database().ref('allowedUsers').once('value')
+    firebase.auth().currentUser.getIdToken(true)
+        .then(() => {
+            return firebase.database().ref('allowedUsers').once('value');
+        })
         .then(snapshot => {
             const users = snapshot.val();
-            // Buscar si el email existe en la DB
             if (users && users[email]) {
-                const role = users[email]; // 'rigbin' o 'candy'
+                const role = users[email];
                 loginSuccess(role, email);
             } else {
                 alert("Acceso denegado. Tu email no está autorizado.");
@@ -108,3 +109,5 @@ function logout() {
 
 // Helper para obtener usuario actual
 window.getCurrentUser = () => currentUserProfile;
+// Inicializar autenticación automáticamente al cargar
+initAuth();
