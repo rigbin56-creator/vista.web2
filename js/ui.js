@@ -95,7 +95,7 @@ function updateUIForLogin(user) {
 
     if(img) {
         // ✅ RUTA CORRECTA Y ÚNICA
-        img.src = user.avatar || 'assets/avatars/default.png';
+        img.src = user.avatar || './assets/avatars/default.png';
         img.style.display = 'block';
     }
 

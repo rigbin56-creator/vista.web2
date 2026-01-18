@@ -72,13 +72,13 @@ function publishPost() {
 function renderPost(post) {
     const profile = (typeof CONFIG !== 'undefined' && CONFIG.PROFILES && CONFIG.PROFILES[post.authorId])
                     ? CONFIG.PROFILES[post.authorId]
-                    : { name: post.author || 'Anónimo', avatar: 'assets/avatars/default.png', color: '#ccc' };
+                    : { name: post.author || 'Anónimo', avatar: './assets/avatars/default.png', color: '#ccc' };
 
     const user = window.getCurrentUser();
     const isOwner = user && (user.id === post.authorId || user.email === post.email);
 
     // 🔽 CORRECCIÓN CRÍTICA: Evitar src="undefined" 🔽
-    const avatarSrc = profile.avatar || 'assets/avatars/default.png';
+    const avatarSrc = profile.avatar || './assets/avatars/default.png';
 
     const contentHtml = linkify(post.content);
     const dateStr = new Date(post.timestamp).toLocaleDateString() + ' ' + new Date(post.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
