@@ -79,7 +79,7 @@ function updateUIForLogin(user) {
 
     if(img) {
         // 🔽 CORRECCIÓN: Fallback para evitar error si no hay avatar
-        img.src = user.avatar || 'assets/avatars/default.png';
+        img.src = user.avatar || 'assets/avatars/default.gif';
         img.style.display = 'block';
     }
     if(ph) ph.style.display = 'none';
