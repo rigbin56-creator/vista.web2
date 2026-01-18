@@ -1,65 +1,44 @@
 /**
  * js/feed.js
- * Versión Limpia: Sin loaders, sin esperas, directo al contenido.
+ * Corrección de bugs: 404 en imágenes y error al publicar.
  */
 
-// Exponer funciones globalmente
 window.publishPost = publishPost;
 window.initFeedListeners = initFeedListeners;
 window.deletePost = deletePost;
 
 const feedContainer = document.getElementById('feedContainer');
-let isListenerAttached = false; // Evita duplicar listeners si se llama dos veces
+let isListenerAttached = false;
 
 function initFeedListeners() {
-    // Validación básica de existencia del contenedor
-    if (!feedContainer) return;
-
-    // Si ya estamos escuchando, no hacemos nada (evita duplicados)
-    if (isListenerAttached) return;
-
-    // NO hay chequeo de usuario aquí. Confiamos en que auth.js nos llamó cuando debía.
-    // NO hay loaders (feedContainer.innerHTML = 'Cargando...').
+    if (!feedContainer || isListenerAttached) return;
 
     isListenerAttached = true;
     const db = firebase.database();
 
-    // Conexión directa a la base de datos
     db.ref('posts').limitToLast(100).on('value', (snapshot) => {
         const data = snapshot.val();
-
-        // Limpiamos el contenedor solo cuando YA tenemos respuesta
         feedContainer.innerHTML = '';
 
         if (!data) {
-            // Estado vacío sutil (sin spinner)
             feedContainer.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-dim)">El baúl está vacío.</div>';
             return;
         }
 
-        // Convertir a array y ordenar (más nuevo primero)
         const posts = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-
-        // Renderizar inmediatamente
         posts.forEach(renderPost);
 
-        // Activar autoplay de videos si existen
         if (typeof initVideoObserver === 'function') initVideoObserver();
     });
 }
 
-/* =========================
-   PUBLICAR POST (Funcionalidad Restaurada)
-   ========================= */
 function publishPost() {
     const user = window.getCurrentUser();
     if (!user) return alert("Error: No hay sesión iniciada.");
 
-    // 1. Capturar inputs reales del DOM
     const textInput = document.getElementById('postTextInput');
     const mediaInput = document.getElementById('postMediaInput');
 
-    // 2. Validar contenido
     const content = textInput ? textInput.value.trim() : '';
     const media = mediaInput ? mediaInput.value.trim() : '';
 
@@ -68,21 +47,19 @@ function publishPost() {
     const db = firebase.database();
     const newKey = db.ref().child('posts').push().key;
 
-    // 3. Estructura de datos compatible con visualización
+    // 🔽 CORRECCIÓN CRÍTICA: Fallback para author y authorId 🔽
     const postData = {
         id: newKey,
-        authorId: user.id, // ID clave para buscar avatar/color en CONFIG
-        author: user.name, // Fallback de nombre
+        authorId: user.id || 'unknown',
+        author: user.name || user.email || 'Anónimo', // Evita "undefined"
         content: content,
         media: media,
         type: detectMediaType(media),
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
 
-    // 4. Guardar en Firebase
     db.ref('posts/' + newKey).set(postData, (err) => {
         if (!err) {
-            // Cerrar panel y limpiar inputs
             if(typeof window.closePublishPanel === 'function') window.closePublishPanel();
             if(textInput) textInput.value = '';
             if(mediaInput) mediaInput.value = '';
@@ -92,24 +69,20 @@ function publishPost() {
     });
 }
 
-/* =========================
-   RENDER POST (Estética Original Restaurada)
-   ========================= */
 function renderPost(post) {
-    // Recuperar estilos del perfil (Avatar, Color) desde CONFIG
     const profile = (typeof CONFIG !== 'undefined' && CONFIG.PROFILES && CONFIG.PROFILES[post.authorId])
                     ? CONFIG.PROFILES[post.authorId]
                     : { name: post.author || 'Anónimo', avatar: 'assets/avatars/default.png', color: '#ccc' };
 
     const user = window.getCurrentUser();
-    // Verificar propiedad para botón de borrar
     const isOwner = user && (user.id === post.authorId || user.email === post.email);
 
-    // Procesar texto y fecha
+    // 🔽 CORRECCIÓN CRÍTICA: Evitar src="undefined" 🔽
+    const avatarSrc = profile.avatar || 'assets/avatars/default.png';
+
     const contentHtml = linkify(post.content);
     const dateStr = new Date(post.timestamp).toLocaleDateString() + ' ' + new Date(post.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-    // Procesar Media (Video vs Imagen vs Youtube)
     let mediaHtml = '';
     const safeText = (post.content || '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
     const youtube = getYoutubeEmbed(post.media || post.content);
@@ -117,7 +90,6 @@ function renderPost(post) {
     if (youtube) {
         mediaHtml = `<div class="media-wrapper youtube-container">${youtube}</div>`;
     } else if (post.media) {
-        // Evento onclick para abrir Lightbox
         const clickAction = `onclick="if(window.lightbox) window.lightbox.open('${post.type}', '${post.media}', '${safeText}', '${profile.name}', '${dateStr}')"`;
 
         if (post.type === 'video') {
@@ -134,12 +106,11 @@ function renderPost(post) {
         }
     }
 
-    // HTML ESTRUCTURAL (post-card) para recuperar CSS
     const html = `
         <article class="post-card">
             <div class="post-header">
                 <div class="author-info">
-                    <img src="${profile.avatar}" class="post-avatar" style="border: 2px solid ${profile.color}" onerror="this.src='assets/avatars/default.png'">
+                    <img src="${avatarSrc}" class="post-avatar" style="border: 2px solid ${profile.color}">
                     <div class="author-text">
                         <span class="author-name" style="color:${profile.color}">${profile.name}</span>
                         <span class="post-date">${dateStr}</span>
@@ -152,26 +123,19 @@ function renderPost(post) {
         </article>
     `;
 
-    // Inserción segura en el DOM
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
     feedContainer.appendChild(tempDiv.firstElementChild);
 }
 
-/* =========================
-   BORRAR POST
-   ========================= */
 function deletePost(id) {
     if(!id) return;
     if(confirm("¿Borrar recuerdo?")) {
-        firebase.database().ref('posts/'+id).remove()
-            .catch(err => alert(err.message));
+        firebase.database().ref('posts/'+id).remove().catch(err => alert(err.message));
     }
 }
 
-/* =========================
-   HELPERS VISUALES
-   ========================= */
+// Helpers
 function detectMediaType(url) {
     if (!url) return 'none';
     if (url.match(/\.(mp4|webm|mov)$/i)) return 'video';
