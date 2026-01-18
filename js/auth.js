@@ -8,16 +8,16 @@ window.loginWithGoogle = loginWithGoogle;
 window.logout = logout;
 window.initAuth = initAuth;
 
+// Estado actual del usuario
 let currentUserProfile = null;
 
 function initAuth() {
-    // Escuchar cambios de sesión en tiempo real
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
-            // Usuario detectado por Firebase -> Verificar Whitelist
+            // Usuario detectado → verificar whitelist
             checkWhitelist(user.email);
         } else {
-            // No hay usuario -> Limpiar estado
+            // No hay usuario
             currentUserProfile = null;
             handleLogoutState();
         }
@@ -25,14 +25,13 @@ function initAuth() {
 }
 
 function checkWhitelist(email) {
-    firebase.auth().currentUser.getIdToken(true)
-        .then(() => {
-            return firebase.database().ref('allowedUsers').once('value');
-        })
+    firebase.database().ref('allowedUsers').once('value')
         .then(snapshot => {
             const users = snapshot.val();
-            if (users && users[email]) {
-                const role = users[email];
+            const safeEmail = email.replace(/\./g, '_');
+
+            if (users && users[safeEmail]) {
+                const role = users[safeEmail]; // rigbin / candy
                 loginSuccess(role, email);
             } else {
                 alert("Acceso denegado. Tu email no está autorizado.");
@@ -49,19 +48,19 @@ function checkWhitelist(email) {
 function loginSuccess(role, email) {
     console.log("✅ Autorizado como:", role);
 
-    // 1. Guardar perfil en memoria
+    // Guardar perfil en memoria
     currentUserProfile = {
         id: role,
         email: email,
         ...CONFIG.PROFILES[role]
     };
 
-    // 2. Actualizar la UI (Botones, Avatar)
+    // Actualizar UI
     if (typeof window.updateUIForLogin === 'function') {
         window.updateUIForLogin(currentUserProfile);
     }
 
-    // 3. Si estamos en la página del Feed, forzar la carga AHORA
+    // Cargar feed si existe
     if (typeof window.initFeedListeners === 'function') {
         window.initFeedListeners();
     }
@@ -72,7 +71,7 @@ function handleLogoutState() {
         window.updateUIForLogout();
     }
 
-    // Si estamos en el feed y no hay usuario, mostrar mensaje de bloqueo
+    // Si estamos en el feed, mostrar bloqueo
     const feedContainer = document.getElementById('feedContainer');
     if (feedContainer) {
         feedContainer.innerHTML = `
@@ -89,11 +88,9 @@ function handleLogoutState() {
 function loginWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider)
-        .then((result) => {
-            // LOGIN EXITOSO MANUAL
-            // Recargamos la página para asegurar que todo esté limpio y sincronizado
-            console.log("Login exitoso, recargando...");
-            window.location.reload();
+        .then(() => {
+            console.log("Login exitoso");
+            // NO forzamos reload acá, dejamos que onAuthStateChanged maneje todo
         })
         .catch((error) => {
             console.error("Error login:", error);
@@ -103,11 +100,12 @@ function loginWithGoogle() {
 
 function logout() {
     firebase.auth().signOut().then(() => {
-        window.location.reload(); // Recargar para limpiar cache y UI
+        window.location.reload();
     });
 }
 
-// Helper para obtener usuario actual
+// Helper para otros scripts
 window.getCurrentUser = () => currentUserProfile;
-// Inicializar autenticación automáticamente al cargar
+
+// Inicializar automáticamente
 initAuth();
