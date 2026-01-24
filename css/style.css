@@ -201,3 +201,100 @@ body.light-mode .dropdown-divider { background: rgba(0,0,0,0.1); }
     max-height: 30vh; overflow-y: auto; color: white;
 }
 .lightbox-info .meta { display: flex; gap: 10px; margin-bottom: 8px; font-size: 0.9rem; color: #ccc; }
+
+/* --- ICONOS E IMÁGENES UI --- */
+.icon-btn {
+    background: none; border: none; padding: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.2s;
+}
+.icon-btn:hover { opacity: 0.8; }
+
+/* Tamaños Oficiales */
+.btn-32 { width: 32px; height: 32px; }
+.btn-24 { width: 24px; height: 24px; }
+.btn-16 { width: 16px; height: 16px; }
+
+.icon-btn img {
+    width: 100%; height: 100%; object-fit: contain;
+    pointer-events: none; /* El click lo recibe el botón */
+}
+
+/* --- EMBEDS FIXES --- */
+/* YouTube Shorts Desktop Fix */
+.shorts-container {
+    width: 100%; max-width: 400px; /* Ancho realista de móvil */
+    aspect-ratio: 9 / 16;
+    margin: 0 auto; /* Centrado */
+    position: relative;
+    background: #000;
+}
+.shorts-container iframe { width: 100%; height: 100%; }
+
+/* Instagram Desktop Fix */
+.insta-container {
+    width: 100%; max-width: 450px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+/* TikTok Preview en Feed */
+.tiktok-preview {
+    background: #111; color: #fff;
+    padding: 20px; text-align: center; border-radius: 8px;
+    cursor: pointer; border: 1px solid #333;
+}
+
+/* --- LIGHTBOX ESTRUCTURADO (Fase 3) --- */
+.lightbox {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.95); z-index: 2000;
+    flex-direction: column; /* Header - Content - Footer */
+}
+.lightbox.active { display: flex; }
+
+.lb-header, .lb-footer {
+    flex-shrink: 0; /* No encoger */
+    padding: 10px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(5px);
+}
+
+.lb-content {
+    flex: 1; /* Ocupa todo el espacio sobrante */
+    display: flex; justify-content: center; align-items: center;
+    overflow: hidden; /* Evita doble scroll por defecto */
+    position: relative;
+    width: 100%;
+}
+
+/* Scroll interno solo cuando es necesario (Zoom Vertical) */
+.lightbox.scroll-mode .lb-content {
+    overflow-y: auto; display: block; /* Block para permitir scroll */
+}
+.lightbox.scroll-mode .media-wrapper-lb {
+    min-height: 100%; display: flex; justify-content: center;
+}
+
+/* Avatar en Lightbox */
+.lb-user-info { display: flex; align-items: center; gap: 10px; }
+.lb-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+.lb-meta { display: flex; flex-direction: column; }
+.lb-name { font-weight: bold; color: #fff; font-size: 0.9rem; text-decoration: none; }
+.lb-date { font-size: 0.75rem; color: #ccc; }
+
+/* --- IMGBB MODAL --- */
+#imgbbModal {
+    display: none; position: fixed; inset: 0; z-index: 3000;
+    background: rgba(0,0,0,0.8); align-items: center; justify-content: center;
+}
+#imgbbModal.active { display: flex; }
+.imgbb-wrapper {
+    width: 90%; max-width: 500px; height: 80%; background: #fff;
+    border-radius: 12px; position: relative; display: flex; flex-direction: column;
+}
+.imgbb-close {
+    position: absolute; top: -40px; right: 0;
+    background: var(--accent); border-radius: 50%; padding: 5px;
+}

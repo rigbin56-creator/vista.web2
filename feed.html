@@ -3,78 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baúl - Feed</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/png" href="./assets/favicon.png">
+    <title>Baúl de Recuerdos</title>
+    <link rel="stylesheet" href="css/styles.css">
+
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    <script async src="https://www.tiktok.com/embed.js"></script>
 </head>
 <body>
+
     <header class="app-header">
-        <nav class="header-nav">
-            <a href="index.html" class="nav-item">Home</a>
-            <a href="feed.html" class="nav-item active">Feed</a>
-            <a href="gallery.html" class="nav-item">Galería</a>
-        </nav>
-        <div class="header-profile">
-            <div id="headerProfileBtn" style="cursor:pointer">
-                <img id="headerProfileImg" src="" class="profile-btn" style="display:none">
-                <div id="headerIconPlaceholder" class="profile-placeholder profile-btn">👤</div>
+        <div class="logo">Recuerdos</div>
+        <div class="header-controls">
+            <div id="headerIconPlaceholder" class="profile-placeholder">👤</div>
+
+            <div id="headerProfileBtn" class="profile-btn-wrapper">
+                <img id="headerProfileImg" src="" alt="Perfil" style="display:none;">
             </div>
-            <div id="profileDropdown" class="profile-dropdown">
-                <a id="myProfileLink" href="#" class="dropdown-item" style="display:none"><span>👤</span> Ver Perfil</a>
-                <div id="themeToggleBtn" class="dropdown-item"><span>🌓</span> Tema</div>
+
+            <div id="profileDropdown" class="dropdown-menu">
+                <a href="#" id="myProfileLink" style="display:none;">Mi Perfil</a>
+                <a href="#" id="themeToggleBtn">Cambiar Tema</a>
                 <div class="dropdown-divider"></div>
-                <div id="loginBtn" class="dropdown-item" onclick="loginWithGoogle()"><span>🔑</span> Iniciar Sesión</div>
-                <div id="logoutBtn" class="dropdown-item" onclick="logout()" style="display:none"><span>🚪</span> Cerrar Sesión</div>
+                <div id="loginBtn" onclick="window.loginWithGoogle()">Iniciar Sesión</div>
+                <div id="logoutBtn" onclick="window.logout()" style="display:none;">Cerrar Sesión</div>
             </div>
         </div>
     </header>
 
-    <main id="feedContainer" class="feed-container">
-        <div style="text-align:center; padding-top:50px;">🔄 Conectando...</div>
-    </main>
+    <button id="newPostsBtn" class="new-posts-btn" onclick="window.showPendingPosts()">
+        </button>
 
-    <button id="fabBtn" class="fab hidden"><span>+</span></button>
+    <main id="feedContainer" class="feed-container">
+        </main>
+
+    <button id="fabBtn" class="fab hidden">+</button>
 
     <div id="publishPanel" class="publish-panel">
-        <div class="panel-head">
+        <div class="panel-header">
             <h3>Nuevo Recuerdo</h3>
-            <button onclick="closePublishPanel()" style="background:none;border:none;font-size:1.5rem;color:var(--text-main)">✕</button>
+            <button class="icon-btn btn-32" onclick="window.closePublishPanel()">
+                <img src="assets/icons/close.png" alt="X">
+            </button>
         </div>
-        <textarea id="postTextInput" class="panel-input" rows="3" placeholder="¿Qué nos cuentas?"></textarea>
-        <input type="text" id="postMediaInput" class="panel-input" placeholder="URL imagen/video...">
-        <button onclick="publishPost()" class="publish-btn">Publicar</button>
+        <div class="publish-inputs">
+            <textarea id="postTextInput" placeholder="¿Qué quieres recordar hoy?"></textarea>
+            <input type="text" id="postMediaInput" placeholder="Pega un link (YouTube, TikTok, ImgBB...)">
+
+            <div class="input-helpers">
+                <button id="btnImgBB" class="icon-btn btn-32" onclick="window.openImgBB()" title="Subir imagen en ImgBB">
+                    <img src="assets/icons/upload_img.png" alt="Subir">
+                </button>
+                <span style="font-size:12px; color:#666;">← Sube tu foto aquí y pega el link</span>
+            </div>
+        </div>
+        <button class="publish-submit-btn" onclick="window.publishPost()">Publicar</button>
+    </div>
+
+    <div id="imgbbModal" class="modal-overlay">
+        <div class="imgbb-wrapper">
+            <button class="icon-btn btn-32 imgbb-close" onclick="document.getElementById('imgbbModal').classList.remove('active')">
+                <img src="assets/icons/close.png" alt="X">
+            </button>
+            <iframe src="https://imgbb.com/upload" title="Subir Imagen"></iframe>
+        </div>
     </div>
 
     <div id="mediaLightbox" class="lightbox">
-        <button class="lightbox-close">✕</button>
-        <div id="lightboxContent" class="lightbox-content"></div>
-        <div id="lightboxInfo" class="lightbox-info"></div>
+        <div class="lb-header">
+            <div class="lb-user-info">
+                <a id="lbProfileLink" href="#"><img id="lbAvatar" class="lb-avatar" src=""></a>
+                <div class="lb-meta">
+                    <a id="lbName" class="lb-name" href="#"></a>
+                    <span id="lbDate" class="lb-date"></span>
+                </div>
+            </div>
+            <button class="icon-btn btn-32" onclick="window.lightbox.close()">
+                <img src="assets/icons/close.png" alt="X">
+            </button>
+        </div>
+
+        <div class="lb-content" id="lbContent">
+            </div>
+
+        <div class="lb-footer">
+            <div id="lbText" class="lb-text"></div>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-        <script src="js/config.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/feed.js"></script>
 
-        <script src="js/auth.js"></script>
-
-        <script src="js/ui.js"></script>
-
-        <script src="js/feed.js"></script>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                console.log("🚀 Iniciando sistema...");
-
-                // 1. Iniciar UI (Listeners de botones, tema, etc.)
-                if (typeof initUI === 'function') initUI();
-
-                // 2. Iniciar Auth (Esto disparará el check de sesión)
-                // Cuando Auth termine, él mismo llamará a initFeedListeners() si corresponde
-                if (typeof initAuth === 'function') initAuth();
-                else console.error("❌ Error CRÍTICO: auth.js no cargó correctamente.");
-            });
-        </script>
+    <script>
+        // Inicialización maestra
+        document.addEventListener("DOMContentLoaded", () => {
+            if(window.initAuth) window.initAuth();
+            if(window.initUI) window.initUI();
+            // Feed se inicia tras el login en auth.js
+        });
+    </script>
 </body>
 </html>

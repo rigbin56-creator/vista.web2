@@ -21,11 +21,24 @@ const CONFIG = {
     }
 };
 
-// --- INICIALIZACIÓN CENTRALIZADA (CRÍTICO) ---
-// Esto asegura que Firebase exista antes de que cualquier otro script corra.
+// 🔽 NUEVO: Rutas de Iconos (PNG/SVG) 🔽
+    ICONS: {
+        like_empty: 'assets/icons/like_empty.png',
+        like_full:  'assets/icons/like_full.png',
+        fav_empty:  'assets/icons/fav_empty.png',
+        fav_full:   'assets/icons/fav_full.png',
+        trash:      'assets/icons/trash.png',
+        upload:     'assets/icons/upload_img.png',
+        close:      'assets/icons/close.png',
+        arrow_up:   'assets/icons/arrow_up.png',
+        default_avatar: 'assets/avatars/default.png'
+    }
+};
+
+// Inicialización Crítica
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(CONFIG.firebaseConfig);
     console.log("🔥 Firebase inicializado en config.js");
 } else if (typeof firebase === 'undefined') {
-    console.error("❌ ERROR: El SDK de Firebase no se ha cargado en el HTML.");
+    console.error("❌ ERROR: Firebase SDK no cargado.");
 }
