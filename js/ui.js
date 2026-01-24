@@ -1,6 +1,6 @@
 /**
  * js/ui.js
- * UI completa restaurada + corrección de rutas de avatar
+ * Fase 2: Zoom Avanzado (Vertical Feed), Perfiles Clickeables y Soporte Embeds.
  */
 
 window.updateUIForLogin = updateUIForLogin;
@@ -8,53 +8,118 @@ window.updateUIForLogout = updateUIForLogout;
 window.initUI = initUI;
 
 /* =========================
-   LIGHTBOX (NO TOCAR)
+   LIGHTBOX AVANZADO (ZOOM)
    ========================= */
 window.lightbox = {
-    open: function(type, url, text, author, date) {
+    open: function(type, url, text, authorName, date, authorAvatar, authorLink) {
         const lb = document.getElementById('mediaLightbox');
         const content = document.getElementById('lightboxContent');
         const info = document.getElementById('lightboxInfo');
         if(!lb || !content) return;
 
+        // Limpiar
         content.innerHTML = '';
-        if (type === 'video') {
-            const v = document.createElement('video');
-            v.src = url;
-            v.controls = true;
-            v.autoplay = true;
-            v.className = 'lightbox-media';
-            content.appendChild(v);
-        } else {
-            const i = document.createElement('img');
-            i.src = url;
-            i.className = 'lightbox-media';
-            content.appendChild(i);
+        lb.className = 'lightbox'; // Reset clases
+
+        // 1. Renderizar Contenido según Tipo
+        let mediaHtml = '';
+        let isVerticalMode = false;
+
+        switch(type) {
+            case 'video':
+                const v = document.createElement('video');
+                v.src = url; v.controls = true; v.autoplay = true;
+                v.className = 'lightbox-media';
+                content.appendChild(v);
+                break;
+
+            case 'shorts':
+                // Shorts en Zoom: iframe real interactivo
+                const shortsId = url.split('shorts/')[1]?.split('?')[0];
+                mediaHtml = `<iframe src="https://www.youtube.com/embed/${shortsId}?autoplay=1&rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="width:100%; height:100%; min-height:80vh;"></iframe>`;
+                isVerticalMode = true;
+                break;
+
+            case 'tiktok':
+                mediaHtml = `<blockquote class="tiktok-embed" cite="${url}" data-video-id="${url.split('/video/')[1]?.split('?')[0]}"><section></section></blockquote>`;
+                isVerticalMode = true;
+                break;
+
+            case 'instagram':
+                 const instaId = url.match(/(?:p|reel)\/([a-zA-Z0-9_-]+)/)?.[1];
+                 mediaHtml = `<iframe src="https://www.instagram.com/p/${instaId}/embed" width="100%" height="800" frameborder="0" scrolling="no"></iframe>`;
+                 isVerticalMode = true;
+                 break;
+
+            case 'twitter':
+                 mediaHtml = `<blockquote class="twitter-tweet"><a href="${url}"></a></blockquote>`;
+                 isVerticalMode = true;
+                 break;
+
+            default: // image
+                const i = document.createElement('img');
+                i.src = url; i.className = 'lightbox-media';
+                content.appendChild(i);
+                break;
         }
 
-        info.innerHTML = `<strong>${author}</strong> • ${date}<br><br>${text}`;
+        if (mediaHtml) content.innerHTML = mediaHtml;
+
+        // 2. Configurar Zoom Vertical (Scroll Lock)
+        if (isVerticalMode) {
+            lb.classList.add('vertical-mode');
+            document.body.style.overflow = 'hidden'; // Bloquear scroll página
+
+            // Re-ejecutar scripts externos para que rendericen dentro del lightbox
+            if(window.twttr) window.twttr.widgets.load();
+            // TikTok script se auto-ejecuta usualmente, si no, se requiere reload manual del script
+        } else {
+            document.body.style.overflow = '';
+        }
+
+        // 3. Renderizar Info del Autor Clickeable
+        const avatarHtml = authorAvatar ? `<a href="${authorLink}"><img src="${authorAvatar}" class="lightbox-avatar"></a>` : '';
+        const nameHtml = `<a href="${authorLink}" style="color:inherit; text-decoration:none;"><strong>${authorName}</strong></a>`;
+
+        info.innerHTML = `
+            <div class="lightbox-header">
+                ${avatarHtml}
+                <div class="lightbox-meta">
+                    ${nameHtml}
+                    <span style="opacity:0.7; font-size:0.85em;">• ${date}</span>
+                </div>
+            </div>
+            <div class="lightbox-text">${text}</div>
+        `;
+
         lb.classList.add('active');
     },
+
     close: function() {
         const lb = document.getElementById('mediaLightbox');
         if(lb) {
             lb.classList.remove('active');
+            lb.classList.remove('vertical-mode');
             document.getElementById('lightboxContent').innerHTML = '';
+
+            // Desbloquear scroll
+            document.body.style.overflow = '';
+
+            // Pausar videos si había
+            const videos = lb.querySelectorAll('video, iframe');
+            videos.forEach(v => v.src = '');
         }
     }
 };
 
 /* =========================
-   PANEL PUBLICAR
+   UI HELPERS (Mantener)
    ========================= */
 window.closePublishPanel = () => {
     const p = document.getElementById('publishPanel');
     if(p) p.classList.remove('active');
 };
 
-/* =========================
-   INIT UI
-   ========================= */
 function initUI() {
     const fab = document.getElementById('fabBtn');
     if(fab) fab.onclick = () => document.getElementById('publishPanel').classList.add('active');
@@ -82,9 +147,6 @@ function initUI() {
     applyStoredTheme();
 }
 
-/* =========================
-   LOGIN / LOGOUT UI
-   ========================= */
 function updateUIForLogin(user) {
     const img = document.getElementById('headerProfileImg');
     const ph = document.getElementById('headerIconPlaceholder');
@@ -94,7 +156,6 @@ function updateUIForLogin(user) {
     const myProfile = document.getElementById('myProfileLink');
 
     if(img) {
-        // ✅ RUTA CORRECTA Y ÚNICA
         img.src = user.avatar || './assets/avatars/default.png';
         img.style.display = 'block';
     }
@@ -130,9 +191,6 @@ function updateUIForLogout() {
     if(myProfile) myProfile.style.display = 'none';
 }
 
-/* =========================
-   TEMA
-   ========================= */
 function toggleTheme() {
     document.body.classList.toggle('light-mode');
     localStorage.setItem(
